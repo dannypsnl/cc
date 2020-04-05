@@ -1,8 +1,10 @@
-module Syntax (
+module C.Syntax (
+  CDef,
   TypeID
 ) where
+import Numeric.Natural (Natural)
 
-type TypeID = UInt
+type TypeID = Natural
 
 -- C
 --

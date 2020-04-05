@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9d9d3cf99af9dfc921390d9ab8f8ef93d3140c853c17fdd85241db8abecb8260
+-- hash: 4c8e9760826f1a3aa82d446f508b22c10c2e9b0c7d009720fc2bca513e95fa77
 
 name:           hscc
 version:        0.1.0.0
@@ -27,14 +27,18 @@ source-repository head
 
 library
   exposed-modules:
+      C.Parser
+      C.Syntax
       Lib
-      Syntax
   other-modules:
       Paths_hscc
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , containers >=0.6
+    , megaparsec >=8.0
+    , text >=1
   default-language: Haskell2010
 
 executable hscc-exe
@@ -46,7 +50,10 @@ executable hscc-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers >=0.6
     , hscc
+    , megaparsec >=8.0
+    , text >=1
   default-language: Haskell2010
 
 test-suite hscc-test
@@ -59,5 +66,8 @@ test-suite hscc-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers >=0.6
     , hscc
+    , megaparsec >=8.0
+    , text >=1
   default-language: Haskell2010
