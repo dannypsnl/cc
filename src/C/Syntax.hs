@@ -1,7 +1,8 @@
 module C.Syntax (
-  CDef,
+  CDef(..),
   TypeID
 ) where
+import Data.Text (Text)
 import Numeric.Natural (Natural)
 
 type TypeID = Natural
@@ -15,6 +16,9 @@ type TypeID = Natural
 -- union: union {}
 data CDef = CTypeDef
   | CVariableDef
+  { varName :: Text
+  , varType :: TypeID
+  }
   | CFunctionDef
   | CStructureDef
   | CUnionDef
