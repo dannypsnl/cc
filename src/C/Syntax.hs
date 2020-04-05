@@ -1,11 +1,13 @@
 module C.Syntax (
   CDef(..),
-  TypeID
+  TypeID,
+  CType(..)
 ) where
 import Data.Text (Text)
 import Numeric.Natural (Natural)
 
 type TypeID = Natural
+data CType = CType Text
 
 -- C
 --
@@ -22,6 +24,7 @@ data CDef = CTypeDef
   | CFunctionDef
   | CStructureDef
   | CUnionDef
+  deriving (Eq, Show)
 
 -- CExpr
 --

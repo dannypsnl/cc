@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4c8e9760826f1a3aa82d446f508b22c10c2e9b0c7d009720fc2bca513e95fa77
+-- hash: 933fba7066f028b883606304d3a4802c2d883da02d0da3e121a89f2fe884b325
 
 name:           hscc
 version:        0.1.0.0
@@ -60,6 +60,8 @@ test-suite hscc-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      C.ParserSpec
+      SpecHelper
       Paths_hscc
   hs-source-dirs:
       test
@@ -68,6 +70,8 @@ test-suite hscc-test
       base >=4.7 && <5
     , containers >=0.6
     , hscc
+    , hspec
+    , hspec-megaparsec
     , megaparsec >=8.0
     , text >=1
   default-language: Haskell2010
