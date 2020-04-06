@@ -45,15 +45,16 @@ parseFunctionDef :: ParseContext -> Parser CDef
 parseFunctionDef env = do
   retTyp <- (parseType env)
   name <- parseIdentifier
-  params <- parens (parseParams env)
+  (params, pTypes) <- parens (parseParams env)
   void (symbol ";")
-  return $ CFunctionDef name retTyp params
+  return $ CFunctionDef name (CArrow retTyp pTypes) params
 
-parseParams :: ParseContext -> Parser [(Text, CType)]
+parseParams :: ParseContext -> Parser ([(Text, CType)], [CType])
 parseParams env = do
   fp <- parseParameter env
   restP <- (many ((symbol ",") >> (parseParameter env)))
-  return (fp:restP)
+  let params = (fp:restP)
+  return (params, map (\(_, t) -> t) params)
 
 parseParameter :: ParseContext -> Parser (Text, CType)
 parseParameter env = do

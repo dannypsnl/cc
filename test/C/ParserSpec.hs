@@ -12,12 +12,12 @@ spec :: Spec
 spec = describe "Parser" $ do
   context "variable definition" $ do
     it "pass" $ do
-      parse (parseVariableDef emptyContext) "" "int i;" `shouldParse` (CVariableDef "i" (TypeID 0))
-
+      tParse (parseVariableDef emptyContext) "int i;" `shouldParse` (CVariableDef "i" (TypeID 0))
   context "function definition" $ do
     it "pass" $ do
-      parse (parseFunctionDef emptyContext) "" "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CArrow (TypeID 0) [(TypeID 0),(TypeID 0)]) [])
+      tParse (parseFunctionDef emptyContext) "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CArrow (TypeID 0) [(TypeID 0),(TypeID 0)]) [ ("x", TypeID 0),("y", TypeID 0)])
 
+tParse f code = parse f "" code
 
 emptyContext :: ParseContext
 emptyContext = ParseContext{
