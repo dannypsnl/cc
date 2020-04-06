@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module C.ParserSpec where
 import C.Parser
 import C.Syntax
@@ -11,10 +12,15 @@ spec :: Spec
 spec = describe "Parser" $ do
   context "variable definition" $ do
     it "pass" $ do
-      parse (parseVariableDef emptyContext) "" (T.pack "int i;") `shouldParse` (CVariableDef{varName=(T.pack "i"), varType=0})
+      parse (parseVariableDef emptyContext) "" "int i;" `shouldParse` (CVariableDef "i" (TypeID 0))
+
+  context "function definition" $ do
+    it "pass" $ do
+      parse (parseFunctionDef emptyContext) "" "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CArrow (TypeID 0) [(TypeID 0),(TypeID 0)]) [])
+
 
 emptyContext :: ParseContext
 emptyContext = ParseContext{
-  typeIDList=[CType (T.pack "int")]
+  typeIDList=[CBuiltinType (T.pack "int")]
   , typeNameToID=Map.fromList([(T.pack "int" , 0)])
   }

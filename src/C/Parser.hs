@@ -3,10 +3,11 @@
 {-# LANGUAGE RecordWildCards   #-}
 module C.Parser (
   parseVariableDef,
+  parseFunctionDef,
   ParseContext(..),
   Parser
 ) where
-import C.Syntax (CDef (..), CType, TypeID)
+import C.Syntax
 import Control.Applicative hiding (many, some)
 import Control.Monad
 import Data.Map.Strict (Map)
@@ -26,7 +27,7 @@ instance ShowErrorComponent CustomError where
 noTypeNamed :: Text -> Parser a
 noTypeNamed = customFailure . NoTypeNamed
 data ParseContext = ParseContext
-  { typeIDList   :: [CType]
+  { typeIDList   :: [CTypeDefinition]
   , typeNameToID :: (Map Text TypeID)
   }
 type Parser = Parsec CustomError Text
@@ -38,17 +39,39 @@ parseVariableDef env = do
   typ <- (parseType env)
   name <- parseIdentifier
   void (symbol ";")
-  return CVariableDef{varName=name, varType=typ}
+  return (CVariableDef name typ)
 
-parseType :: ParseContext -> Parser TypeID
+parseFunctionDef :: ParseContext -> Parser CDef
+parseFunctionDef env = do
+  retTyp <- (parseType env)
+  name <- parseIdentifier
+  params <- parens (parseParams env)
+  void (symbol ";")
+  return $ CFunctionDef name retTyp params
+
+parseParams :: ParseContext -> Parser [(Text, CType)]
+parseParams env = do
+  fp <- parseParameter env
+  restP <- (many ((symbol ",") >> (parseParameter env)))
+  return (fp:restP)
+
+parseParameter :: ParseContext -> Parser (Text, CType)
+parseParameter env = do
+  typ <- (parseType env)
+  name <- parseIdentifier
+  return (name, typ)
+
+parseType :: ParseContext -> Parser CType
 parseType ParseContext{typeNameToID} = do
   s <- parseIdentifier
   case (Map.lookup s typeNameToID) of
     Nothing -> noTypeNamed s
-    Just id -> return id
+    Just id -> return (TypeID id)
 
 parseIdentifier :: Parser Text
 parseIdentifier = T.pack <$> lexeme (some alphaNumChar)
+
+parens = between (symbol "(") (symbol ")")
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc
