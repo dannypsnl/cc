@@ -4,6 +4,7 @@
 module C.Parser (
   parseVariableDef,
   parseFunctionDef,
+  parseStructureDef,
   ParseContext(..),
   Parser
 ) where
@@ -49,6 +50,20 @@ parseFunctionDef env = do
   void (symbol ";")
   return $ CFunctionDef name (CArrow retTyp pTypes) params
 
+parseStructureDef :: ParseContext -> Parser CDef
+parseStructureDef env = do
+  void (symbol "struct")
+  name <- parseIdentifier
+  fields <- braces (many (parseStructureField env))
+  return $ CStructureDef name fields
+
+parseStructureField :: ParseContext -> Parser (Text, CType)
+parseStructureField env = do
+  typ <- parseType env
+  name <- parseIdentifier
+  void (symbol ";")
+  return (name, typ)
+
 parseParams :: ParseContext -> Parser ([(Text, CType)], [CType])
 parseParams env = do
   fp <- parseParameter env
@@ -70,9 +85,10 @@ parseType ParseContext{typeNameToID} = do
     Just id -> return (TypeID id)
 
 parseIdentifier :: Parser Text
-parseIdentifier = T.pack <$> lexeme (some alphaNumChar)
+parseIdentifier = T.pack <$> lexeme (some alphaNumChar) <?> "identifier"
 
 parens = between (symbol "(") (symbol ")")
+braces = between (symbol "{") (symbol "}")
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc

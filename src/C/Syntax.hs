@@ -25,10 +25,14 @@ data CTypeDefinition = CBuiltinType Text
 --
 -- variable: int i;
 -- function: int add(int, int);
--- structure: struct {}
+-- structure:
+--   struct Car {
+--     char* name;
+--     int price;
+--   }
 data CDef = CVariableDef Text CType
   | CFunctionDef Text CType [(Text, CType)]
-  | CStructureDef
+  | CStructureDef Text [(Text, CType)]
   deriving (Eq, Show)
 
 -- CExpr

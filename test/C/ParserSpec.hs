@@ -15,7 +15,10 @@ spec = describe "Parser" $ do
       tParse (parseVariableDef emptyContext) "int i;" `shouldParse` (CVariableDef "i" (TypeID 0))
   context "function definition" $ do
     it "pass" $ do
-      tParse (parseFunctionDef emptyContext) "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CArrow (TypeID 0) [(TypeID 0),(TypeID 0)]) [ ("x", TypeID 0),("y", TypeID 0)])
+      tParse (parseFunctionDef emptyContext) "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CArrow (TypeID 0) [(TypeID 0),(TypeID 0)]) [("x", TypeID 0), ("y", TypeID 0)])
+  context "structure definition" $ do
+    it "pass" $ do
+      tParse (parseStructureDef emptyContext) "struct Car { int price; };" `shouldParse` (CStructureDef "Car" [("price", TypeID 0)])
 
 tParse f code = parse f "" code
 
