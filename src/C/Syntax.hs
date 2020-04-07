@@ -23,16 +23,12 @@ data CTypeDefinition = CBuiltinType Text
 
 -- C
 --
--- typedef
 -- variable: int i;
 -- function: int add(int, int);
 -- structure: struct {}
--- union: union {}
-data CDef = CTypeDef
-  | CVariableDef Text CType
+data CDef = CVariableDef Text CType
   | CFunctionDef Text CType [(Text, CType)]
   | CStructureDef
-  | CUnionDef
   deriving (Eq, Show)
 
 -- CExpr
