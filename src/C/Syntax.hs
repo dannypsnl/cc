@@ -3,7 +3,8 @@ module C.Syntax (
   TypeID,
   CType(..),
   CTypeDefinition(..),
-  CStatement(..)
+  CStatement(..),
+  CExpr(..),
 ) where
 import Data.Text (Text)
 import Numeric.Natural (Natural)
@@ -37,25 +38,18 @@ data CDef = CVariableDef Text CType
   deriving (Eq, Show)
 
 -- CStatement
-data CStatement = CStmtVar Text CType (Maybe CExpr)
+data CStatement = CLocalVar Text CType (Maybe CExpr)
+  | CReturn (Maybe CExpr)
   deriving (Eq, Show)
 
 -- CExpr
 --
 -- binary: 1 + 1, 0b1111 >> 1
--- unary: -1
--- literal
-data CExpr = CBinary CExpr CExpr
-  | CUnary CLiteral
-  | CLiteral
-  deriving (Eq, Show)
-
--- CLiteral
---
 -- string: ""
 -- int: 0x0, 1
 -- float: 1.43
-data CLiteral = CString
-  | CInt
+data CExpr = CBinary CExpr CExpr
+  | CString
+  | CInt Integer
   | CFloat
   deriving (Eq, Show)

@@ -5,6 +5,7 @@ module C.Parser (
   parseVariableDef,
   parseFunctionDef,
   parseStructureDef,
+  parseStmt,
   ParseContext(..),
   Parser
 ) where
@@ -55,18 +56,23 @@ parseFunctionBody env = (\_ -> Nothing) <$> void (symbol ";")
   <|> Just <$> braces (many (parseStmt env))
 
 parseStmt :: ParseContext -> Parser CStatement
-parseStmt env = parseLocalVar env
+parseStmt env = const <$> (parseStmt' env) <*> (void (symbol ";"))
+parseStmt' :: ParseContext -> Parser CStatement
+parseStmt' env = CReturn <$> ((void (keyword "return")) >> (option Nothing (Just <$> parseExpr)))
+  <|> parseLocalVar env
 
 parseLocalVar :: ParseContext -> Parser CStatement
 parseLocalVar env = do
   typ <- (parseType env)
   name <- parseIdentifier
-  void (symbol ";")
-  return $ CStmtVar name typ Nothing
+  return $ CLocalVar name typ Nothing
+
+parseExpr :: Parser CExpr
+parseExpr = CInt <$> integer
 
 parseStructureDef :: ParseContext -> Parser CDef
 parseStructureDef env = do
-  void (symbol "struct")
+  void (keyword "struct")
   name <- parseIdentifier
   fields <- braces (many (parseStructureField env))
   void (symbol ";")
@@ -108,7 +114,16 @@ braces = between (symbol "{") (symbol "}")
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc
 symbol :: Text -> Parser Text
-symbol = L.symbol sc
+symbol w = L.symbol sc w <?> T.unpack w
+keyword :: Text -> Parser Text
+keyword w = L.symbol sc w <?> T.unpack w
+
+integer :: Parser Integer
+integer = L.signed sc (lexeme L.decimal)
+
+-- sc
+--
+-- space consumer
 sc :: Parser ()
 sc = L.space
   space1                         -- (2)

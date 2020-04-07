@@ -32,6 +32,13 @@ spec = describe "Parser" $ do
       tParse (parseFunctionDef emptyContext) `shouldFailOn` "int add"
       -- missing body
       tParse (parseFunctionDef emptyContext) `shouldFailOn` "int add(int x, int y)"
+  context "statement" $ do
+    it "local var" $ do
+      tParse (parseStmt emptyContext) "int i;" `shouldParse` (CLocalVar "i" (TypeID 0) Nothing)
+    it "return" $ do
+      tParse (parseStmt emptyContext) "return;" `shouldParse` (CReturn Nothing)
+    it "return something" $ do
+      tParse (parseStmt emptyContext) "return 1;" `shouldParse` (CReturn (Just (CInt 1)))
   context "structure definition" $ do
     it "pass" $ do
       tParse (parseStructureDef emptyContext) "struct Car { int price; };" `shouldParse` (CStructureDef "Car" [("price", TypeID 0)])
