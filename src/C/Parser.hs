@@ -87,9 +87,7 @@ parseStructureField env = do
 
 parseParams :: ParseContext -> Parser ([(Text, CType)], [CType])
 parseParams env = do
-  fp <- parseParameter env
-  restP <- (many ((symbol ",") >> (parseParameter env)))
-  let params = (fp:restP)
+  params <- (parseParameter env) `sepBy` (symbol ",")
   return (params, map (\(_, t) -> t) params)
 
 parseParameter :: ParseContext -> Parser (Text, CType)
