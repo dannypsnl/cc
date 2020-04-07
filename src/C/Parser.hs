@@ -55,6 +55,7 @@ parseStructureDef env = do
   void (symbol "struct")
   name <- parseIdentifier
   fields <- braces (many (parseStructureField env))
+  void (symbol ";")
   return $ CStructureDef name fields
 
 parseStructureField :: ParseContext -> Parser (Text, CType)
