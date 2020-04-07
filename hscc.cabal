@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 933fba7066f028b883606304d3a4802c2d883da02d0da3e121a89f2fe884b325
+-- hash: 1ae3254889add3ac6809bf846e4f78f448250ccef28a85904faf81b7510bf2d1
 
 name:           hscc
 version:        0.1.0.0
@@ -14,7 +14,7 @@ bug-reports:    https://github.com/dannypsnl/hscc/issues
 author:         dannypsnl
 maintainer:     dannypsnl@gmail.com
 copyright:      2020 dannypsnl
-license:        BSD3
+license:        MIT
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
