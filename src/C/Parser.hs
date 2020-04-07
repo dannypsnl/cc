@@ -40,7 +40,7 @@ parseVariableDef env = do
   typ <- (parseType env)
   name <- parseIdentifier
   void (symbol ";")
-  return (CVariableDef name typ)
+  return $ CVariableDef name typ
 
 parseFunctionDef :: ParseContext -> Parser CDef
 parseFunctionDef env = do
