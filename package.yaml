@@ -1,7 +1,7 @@
 name:                hscc
 version:             0.1.0.0
 github:              "dannypsnl/hscc"
-license:             BSD3
+license:             MIT
 author:              "dannypsnl"
 maintainer:          "dannypsnl@gmail.com"
 copyright:           "2020 dannypsnl"
