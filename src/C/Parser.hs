@@ -47,8 +47,22 @@ parseFunctionDef env = do
   retTyp <- (parseType env)
   name <- parseIdentifier
   (params, pTypes) <- parens (parseParams env)
+  body <- parseFunctionBody env
+  return $ CFunctionDef name (CArrow retTyp pTypes) params body
+
+parseFunctionBody :: ParseContext -> Parser (Maybe [CStatement])
+parseFunctionBody env = (\_ -> Nothing) <$> void (symbol ";")
+  <|> Just <$> braces (many (parseStmt env))
+
+parseStmt :: ParseContext -> Parser CStatement
+parseStmt env = parseLocalVar env
+
+parseLocalVar :: ParseContext -> Parser CStatement
+parseLocalVar env = do
+  typ <- (parseType env)
+  name <- parseIdentifier
   void (symbol ";")
-  return $ CFunctionDef name (CArrow retTyp pTypes) params
+  return $ CStmtVar name typ Nothing
 
 parseStructureDef :: ParseContext -> Parser CDef
 parseStructureDef env = do

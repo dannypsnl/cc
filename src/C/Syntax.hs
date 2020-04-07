@@ -2,7 +2,8 @@ module C.Syntax (
   CDef(..),
   TypeID,
   CType(..),
-  CTypeDefinition(..)
+  CTypeDefinition(..),
+  CStatement(..)
 ) where
 import Data.Text (Text)
 import Numeric.Natural (Natural)
@@ -31,8 +32,12 @@ data CTypeDefinition = CBuiltinType Text
 --     int price;
 --   }
 data CDef = CVariableDef Text CType
-  | CFunctionDef Text CType [(Text, CType)]
+  | CFunctionDef Text CType [(Text, CType)] (Maybe [CStatement])
   | CStructureDef Text [(Text, CType)]
+  deriving (Eq, Show)
+
+-- CStatement
+data CStatement = CStmtVar Text CType (Maybe CExpr)
   deriving (Eq, Show)
 
 -- CExpr
@@ -40,9 +45,10 @@ data CDef = CVariableDef Text CType
 -- binary: 1 + 1, 0b1111 >> 1
 -- unary: -1
 -- literal
-data CExpr = CBinary
-  | CUnary
+data CExpr = CBinary CExpr CExpr
+  | CUnary CLiteral
   | CLiteral
+  deriving (Eq, Show)
 
 -- CLiteral
 --
@@ -52,3 +58,4 @@ data CExpr = CBinary
 data CLiteral = CString
   | CInt
   | CFloat
+  deriving (Eq, Show)

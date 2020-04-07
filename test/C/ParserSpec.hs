@@ -21,7 +21,9 @@ spec = describe "Parser" $ do
       tParse (parseVariableDef emptyContext) `shouldFailOn` "int i"
   context "function definition" $ do
     it "pass" $ do
-      tParse (parseFunctionDef emptyContext) "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CArrow (TypeID 0) [(TypeID 0),(TypeID 0)]) [("x", TypeID 0), ("y", TypeID 0)])
+      tParse (parseFunctionDef emptyContext) "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CArrow (TypeID 0) [(TypeID 0),(TypeID 0)]) [("x", TypeID 0), ("y", TypeID 0)] Nothing)
+    it "body" $ do
+      tParse (parseFunctionDef emptyContext) "int add(int x, int y) {}" `shouldParse` (CFunctionDef "add" (CArrow (TypeID 0) [(TypeID 0),(TypeID 0)]) [("x", TypeID 0), ("y", TypeID 0)] (Just []))
     it "should failed" $ do
       tParse (parseFunctionDef emptyContext) `shouldFailOn` ""
       -- missing name
