@@ -13,51 +13,45 @@ spec :: Spec
 spec = describe "Parser" $ do
   context "variable definition" $ do
     it "pass" $ do
-      tParse (parseVariableDef emptyContext) "int i;" `shouldParse` (CVariableDef "i" (TypeID 0))
+      tParse parseVariableDef "int i;" `shouldParse` (CVariableDef "i" (CTypeName "int"))
     it "should failed" $ do
-      tParse (parseVariableDef emptyContext) `shouldFailOn` ""
+      tParse parseVariableDef `shouldFailOn` ""
       -- missing name
-      tParse (parseVariableDef emptyContext) `shouldFailOn` "int "
+      tParse parseVariableDef `shouldFailOn` "int "
       -- missing `;`
-      tParse (parseVariableDef emptyContext) `shouldFailOn` "int i"
+      tParse parseVariableDef `shouldFailOn` "int i"
   context "function definition" $ do
     it "pass" $ do
-      tParse (parseFunctionDef emptyContext) "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CArrow (TypeID 0) [(TypeID 0),(TypeID 0)]) [("x", TypeID 0), ("y", TypeID 0)] Nothing)
+      tParse parseFunctionDef "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CArrow (CTypeName "int") [(CTypeName "int"), (CTypeName "int")]) [("x", (CTypeName "int")), ("y", (CTypeName "int"))] Nothing)
     it "body" $ do
-      tParse (parseFunctionDef emptyContext) "int add(int x, int y) {}" `shouldParse` (CFunctionDef "add" (CArrow (TypeID 0) [(TypeID 0),(TypeID 0)]) [("x", TypeID 0), ("y", TypeID 0)] (Just []))
+      tParse parseFunctionDef "int add(int x, int y) {}" `shouldParse` (CFunctionDef "add" (CArrow ((CTypeName "int")) [(CTypeName "int"),(CTypeName "int")]) [("x", (CTypeName "int")), ("y", (CTypeName "int"))] (Just []))
     it "should failed" $ do
-      tParse (parseFunctionDef emptyContext) `shouldFailOn` ""
+      tParse parseFunctionDef `shouldFailOn` ""
       -- missing name
-      tParse (parseFunctionDef emptyContext) `shouldFailOn` "int "
+      tParse parseFunctionDef `shouldFailOn` "int "
       -- missing parameters
-      tParse (parseFunctionDef emptyContext) `shouldFailOn` "int add"
+      tParse parseFunctionDef `shouldFailOn` "int add"
       -- missing body
-      tParse (parseFunctionDef emptyContext) `shouldFailOn` "int add(int x, int y)"
+      tParse parseFunctionDef `shouldFailOn` "int add(int x, int y)"
   context "statement" $ do
     it "local var" $ do
-      tParse (parseStmt emptyContext) "int i;" `shouldParse` (CLocalVar "i" (TypeID 0) Nothing)
+      tParse parseStmt "int i;" `shouldParse` (CLocalVar "i" (CTypeName "int") Nothing)
     it "return" $ do
-      tParse (parseStmt emptyContext) "return;" `shouldParse` (CReturn Nothing)
+      tParse parseStmt "return;" `shouldParse` (CReturn Nothing)
     it "return something" $ do
-      tParse (parseStmt emptyContext) "return 1;" `shouldParse` (CReturn (Just (CInt 1)))
+      tParse parseStmt "return 1;" `shouldParse` (CReturn (Just (CInt 1)))
   context "structure definition" $ do
     it "pass" $ do
-      tParse (parseStructureDef emptyContext) "struct Car { int price; };" `shouldParse` (CStructureDef "Car" [("price", TypeID 0)])
+      tParse parseStructureDef "struct Car { int price; };" `shouldParse` (CStructureDef "Car" [("price", (CTypeName "int"))])
     it "should failed" $ do
-      tParse (parseStructureDef emptyContext) `shouldFailOn` ""
+      tParse parseStructureDef `shouldFailOn` ""
       -- missing name
-      tParse (parseStructureDef emptyContext) `shouldFailOn` "struct"
+      tParse parseStructureDef `shouldFailOn` "struct"
       -- missing field part
-      tParse (parseStructureDef emptyContext) `shouldFailOn` "struct Car"
+      tParse parseStructureDef `shouldFailOn` "struct Car"
       -- missing `}`
-      tParse (parseStructureDef emptyContext) `shouldFailOn` "struct Car {;"
+      tParse parseStructureDef `shouldFailOn` "struct Car {;"
       -- missing `;`
-      tParse (parseStructureDef emptyContext) `shouldFailOn` "struct Car {}"
+      tParse parseStructureDef `shouldFailOn` "struct Car {}"
 
 tParse f code = parse f "" code
-
-emptyContext :: Context
-emptyContext = Context {
-  typeIDList=[CBuiltinType (T.pack "int")]
-  , typeNameToID=Map.fromList([(T.pack "int" , 0)])
-  }

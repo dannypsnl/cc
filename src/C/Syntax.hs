@@ -1,6 +1,5 @@
 module C.Syntax (
   CDef(..),
-  TypeID,
   CType(..),
   CStatement(..),
   CExpr(..),
@@ -8,15 +7,10 @@ module C.Syntax (
 import C.Semantic
 import Data.Text (Text)
 
--- CType
--- TypeID: `0` -> CBuiltinType "void"
--- CArrow: `1(1, 1)`, `1` -> CBuiltinType "int"
--- CWrap: `2 1`, `2` -> CBuiltinType "*", `1` -> CBuiltinType "int"
-data CType = TypeID TypeID
+data CType = CTypeName Text
   | CArrow CType [CType]
   | CWrap CType CType
   deriving (Eq, Show)
-
 
 -- C
 --

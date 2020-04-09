@@ -4,7 +4,9 @@ module C.Semantic (
   TypeID,
 ) where
 import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 import Data.Text
+import qualified Data.Text as T
 import Numeric.Natural (Natural)
 
 type TypeID = Natural
@@ -16,4 +18,12 @@ data CTypeDefinition = CBuiltinType Text
 data Context = Context
   { typeIDList   :: [CTypeDefinition]
   , typeNameToID :: (Map Text TypeID)
+  , variables    :: (Map Text TypeID)
+  }
+
+emptyContext :: Context
+emptyContext = Context {
+  typeIDList=[CBuiltinType (T.pack "int")]
+  , typeNameToID=Map.fromList([(T.pack "int" , 0)])
+  , variables = Map.empty
   }

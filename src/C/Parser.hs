@@ -31,72 +31,68 @@ type Parser = Parsec CustomError Text
 
 --parseFile :: ParserSpec [CDef]
 --parseDef :: ParserSpec CDef
-parseVariableDef :: Context -> Parser CDef
-parseVariableDef env = do
-  typ <- (parseType env)
+parseVariableDef :: Parser CDef
+parseVariableDef = do
+  typ <- parseType
   name <- parseIdentifier
   void (symbol ";")
   return $ CVariableDef name typ
 
-parseFunctionDef :: Context -> Parser CDef
-parseFunctionDef env = do
-  retTyp <- (parseType env)
+parseFunctionDef :: Parser CDef
+parseFunctionDef = do
+  retTyp <- (parseType)
   name <- parseIdentifier
-  (params, pTypes) <- parens (parseParams env)
-  body <- parseFunctionBody env
+  (params, pTypes) <- parens (parseParams)
+  body <- parseFunctionBody
   return $ CFunctionDef name (CArrow retTyp pTypes) params body
 
-parseFunctionBody :: Context -> Parser (Maybe [CStatement])
-parseFunctionBody env = (\_ -> Nothing) <$> void (symbol ";")
-  <|> Just <$> braces (many (parseStmt env))
+parseFunctionBody :: Parser (Maybe [CStatement])
+parseFunctionBody = (\_ -> Nothing) <$> void (symbol ";")
+  <|> Just <$> braces (many (parseStmt))
 
-parseStmt :: Context -> Parser CStatement
-parseStmt env = const <$> (parseStmt' env) <*> (void (symbol ";"))
-parseStmt' :: Context -> Parser CStatement
-parseStmt' env = CReturn <$> ((void (keyword "return")) >> (option Nothing (Just <$> parseExpr)))
-  <|> parseLocalVar env
+parseStmt :: Parser CStatement
+parseStmt = const <$> (parseStmt') <*> (void (symbol ";"))
+parseStmt' :: Parser CStatement
+parseStmt' = CReturn <$> ((void (keyword "return")) >> (option Nothing (Just <$> parseExpr)))
+  <|> parseLocalVar
 
-parseLocalVar :: Context -> Parser CStatement
-parseLocalVar env = do
-  typ <- (parseType env)
+parseLocalVar :: Parser CStatement
+parseLocalVar = do
+  typ <- (parseType)
   name <- parseIdentifier
   return $ CLocalVar name typ Nothing
 
 parseExpr :: Parser CExpr
 parseExpr = CInt <$> integer
 
-parseStructureDef :: Context -> Parser CDef
-parseStructureDef env = do
+parseStructureDef :: Parser CDef
+parseStructureDef = do
   void (keyword "struct")
   name <- parseIdentifier
-  fields <- braces (many (parseStructureField env))
+  fields <- braces (many (parseStructureField))
   void (symbol ";")
   return $ CStructureDef name fields
 
-parseStructureField :: Context -> Parser (Text, CType)
-parseStructureField env = do
-  typ <- parseType env
+parseStructureField :: Parser (Text, CType)
+parseStructureField = do
+  typ <- parseType
   name <- parseIdentifier
   void (symbol ";")
   return (name, typ)
 
-parseParams :: Context -> Parser ([(Text, CType)], [CType])
-parseParams env = do
-  params <- (parseParameter env) `sepBy` (symbol ",")
+parseParams :: Parser ([(Text, CType)], [CType])
+parseParams = do
+  params <- (parseParameter) `sepBy` (symbol ",")
   return (params, map (\(_, t) -> t) params)
 
-parseParameter :: Context -> Parser (Text, CType)
-parseParameter env = do
-  typ <- (parseType env)
+parseParameter :: Parser (Text, CType)
+parseParameter = do
+  typ <- (parseType)
   name <- parseIdentifier
   return (name, typ)
 
-parseType :: Context -> Parser CType
-parseType Context{typeNameToID} = do
-  s <- parseIdentifier
-  case (Map.lookup s typeNameToID) of
-    Nothing -> noTypeNamed s
-    Just id -> return (TypeID id)
+parseType :: Parser CType
+parseType = CTypeName <$> parseIdentifier
 
 parseIdentifier :: Parser Text
 parseIdentifier = T.pack <$> lexeme (some alphaNumChar) <?> "identifier"
