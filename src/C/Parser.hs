@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 module C.Parser (
+  parseFile,
   parseVariableDef,
   parseFunctionDef,
   parseStructureDef,
@@ -13,6 +14,7 @@ import C.Semantic.Error
 import C.Syntax
 import Control.Applicative hiding (many, some)
 import Control.Monad
+import Control.Monad.Except
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import qualified Data.Text as T
@@ -25,10 +27,16 @@ import Text.Megaparsec.Error (ShowErrorComponent)
 instance ShowErrorComponent CError where
   showErrorComponent (NoTypeNamed txt) = "no type named: " ++ T.unpack txt
 
-type Parser = Parsec CError Text
+type Parser = Parsec Void Text
 
---parseFile :: ParserSpec [CDef]
---parseDef :: ParserSpec CDef
+parseFile :: Parser [CDef]
+parseFile = many parseDef
+
+parseDef :: Parser CDef
+parseDef = parseVariableDef
+  <|> parseFunctionDef
+  <|> parseStructureDef
+
 parseVariableDef :: Parser CDef
 parseVariableDef = do
   typ <- parseType
