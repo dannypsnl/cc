@@ -9,6 +9,7 @@ module C.Parser (
   Parser
 ) where
 import C.Semantic
+import C.Semantic.Error
 import C.Syntax
 import Control.Applicative hiding (many, some)
 import Control.Monad
@@ -21,13 +22,10 @@ import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Text.Megaparsec.Error (ShowErrorComponent)
 
-data CustomError = NoTypeNamed Text
-  deriving (Eq, Show, Ord)
-instance ShowErrorComponent CustomError where
+instance ShowErrorComponent CError where
   showErrorComponent (NoTypeNamed txt) = "no type named: " ++ T.unpack txt
-noTypeNamed :: Text -> Parser a
-noTypeNamed = customFailure . NoTypeNamed
-type Parser = Parsec CustomError Text
+
+type Parser = Parsec CError Text
 
 --parseFile :: ParserSpec [CDef]
 --parseDef :: ParserSpec CDef

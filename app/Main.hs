@@ -1,6 +1,8 @@
 module Main where
 
-import Lib
+import C.Parser
+import C.Semantic
 
 main :: IO ()
-main = someFunc
+main = do
+  putStrLn "todo"

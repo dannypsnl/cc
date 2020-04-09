@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c75d285df9a23667f9405509c49f2179548ed443888e6bd0e78e569cd7a6e772
+-- hash: d36eb251a9b74cd3a32b72d42e95e0beb1667da9febc17f941b73588ab3807fc
 
 name:           hscc
 version:        0.1.0.0
@@ -29,8 +29,8 @@ library
   exposed-modules:
       C.Parser
       C.Semantic
+      C.Semantic.Error
       C.Syntax
-      Lib
   other-modules:
       Paths_hscc
   hs-source-dirs:
@@ -39,6 +39,7 @@ library
       base >=4.7 && <5
     , containers >=0.6
     , megaparsec >=8.0
+    , mtl >=2.2
     , text >=1
   default-language: Haskell2010
 
@@ -54,6 +55,7 @@ executable hscc-exe
     , containers >=0.6
     , hscc
     , megaparsec >=8.0
+    , mtl >=2.2
     , text >=1
   default-language: Haskell2010
 
@@ -74,5 +76,6 @@ test-suite hscc-test
     , hspec
     , hspec-megaparsec
     , megaparsec >=8.0
+    , mtl >=2.2
     , text >=1
   default-language: Haskell2010
