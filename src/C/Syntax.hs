@@ -2,14 +2,12 @@ module C.Syntax (
   CDef(..),
   TypeID,
   CType(..),
-  CTypeDefinition(..),
   CStatement(..),
   CExpr(..),
 ) where
+import C.Semantic
 import Data.Text (Text)
-import Numeric.Natural (Natural)
 
-type TypeID = Natural
 -- CType
 -- TypeID: `0` -> CBuiltinType "void"
 -- CArrow: `1(1, 1)`, `1` -> CBuiltinType "int"
@@ -18,10 +16,7 @@ data CType = TypeID TypeID
   | CArrow CType [CType]
   | CWrap CType CType
   deriving (Eq, Show)
--- CTypeDefinition is not CType
--- the different is CType reference to CTypeDefinition for definition of a type
-data CTypeDefinition = CBuiltinType Text
-  | CStructType
+
 
 -- C
 --

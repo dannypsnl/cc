@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.31.2.
+-- This file has been generated from package.yaml by hpack version 0.33.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1ae3254889add3ac6809bf846e4f78f448250ccef28a85904faf81b7510bf2d1
+-- hash: c75d285df9a23667f9405509c49f2179548ed443888e6bd0e78e569cd7a6e772
 
 name:           hscc
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       C.Parser
+      C.Semantic
       C.Syntax
       Lib
   other-modules:

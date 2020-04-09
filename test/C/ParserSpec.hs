@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module C.ParserSpec where
 import C.Parser
+import C.Semantic
 import C.Syntax
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as T
@@ -55,8 +56,8 @@ spec = describe "Parser" $ do
 
 tParse f code = parse f "" code
 
-emptyContext :: ParseContext
-emptyContext = ParseContext{
+emptyContext :: Context
+emptyContext = Context {
   typeIDList=[CBuiltinType (T.pack "int")]
   , typeNameToID=Map.fromList([(T.pack "int" , 0)])
   }
