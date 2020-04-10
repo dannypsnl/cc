@@ -18,8 +18,8 @@ type Env = IORef Context
 
 newType :: Env -> Text -> CTypeDefinition -> IOThrowsError ()
 newType envRef typName typ = do
-  Context{typeIDList, typeNameToID, variables} <- liftIO $ readIORef envRef
-  liftIO $ writeIORef envRef (Context{typeIDList=typeIDList ++ [typ], typeNameToID=Map.insert typName (length typeIDList) typeNameToID, variables=variables})
+  env@Context{typeIDList, typeNameToID} <- liftIO $ readIORef envRef
+  liftIO $ writeIORef envRef (env {typeIDList=typeIDList ++ [typ], typeNameToID=Map.insert typName (length typeIDList) typeNameToID})
   return ()
 
 nullEnv :: IO Env
