@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d36eb251a9b74cd3a32b72d42e95e0beb1667da9febc17f941b73588ab3807fc
+-- hash: 4988b7d2cf53c2818d5f0800b8dd4f44d365fd949684828f55eb648c37fe8448
 
 name:           hscc
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       C.Parser
       C.Semantic
+      C.Semantic.Checker
       C.Semantic.Error
       C.Syntax
   other-modules:

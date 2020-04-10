@@ -2,6 +2,7 @@ module Main where
 
 import C.Parser
 import C.Semantic
+import C.Semantic.Checker
 import Control.Monad.Except
 import Data.Text.IO (readFile)
 import Prelude hiding (readFile)
@@ -15,5 +16,7 @@ main = do
     [fileName] -> do
       fileContent <- readFile fileName
       case runParser parseFile fileName fileContent of
-        Left err  -> putStrLn (show err)
-        Right val -> putStrLn "Ok"
+        Left err         -> putStrLn (show err)
+        Right listOfCDef -> do
+          env <- nullEnv
+          checkFile env listOfCDef

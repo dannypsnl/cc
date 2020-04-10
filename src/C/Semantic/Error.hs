@@ -1,18 +1,15 @@
 module C.Semantic.Error (
-  liftThrows,
+  ReportError(..),
   CError(..),
-  ThrowsError,
-  IOThrowsError,
 ) where
-import Control.Monad.Except (ExceptT, throwError)
 import Data.Text
 import qualified Data.Text as T
+import Text.Megaparsec.Pos
 
-liftThrows :: ThrowsError a -> IOThrowsError a
-liftThrows (Left err)  = throwError err
-liftThrows (Right val) = return val
-type ThrowsError = Either [CError]
-type IOThrowsError = ExceptT [CError] IO
+data ReportError = ReportError
+  { location :: SourcePos
+  , error    :: CError
+  }
 
 data CError = NoTypeNamed Text
   deriving (Eq, Show, Ord)

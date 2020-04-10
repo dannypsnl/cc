@@ -1,6 +1,8 @@
 {-# LANGUAGE NamedFieldPuns    #-}
 {-# LANGUAGE OverloadedStrings #-}
 module C.Semantic (
+  nullEnv,
+  Env,
   Context(..),
   CTypeDefinition(..),
   TypeID,
@@ -16,7 +18,7 @@ import Numeric.Natural (Natural)
 
 type Env = IORef Context
 
-newType :: Env -> Text -> CTypeDefinition -> IOThrowsError ()
+newType :: Env -> Text -> CTypeDefinition -> IO ()
 newType envRef typName typ = do
   env@Context{typeIDList, typeNameToID} <- liftIO $ readIORef envRef
   liftIO $ writeIORef envRef (env {typeIDList=typeIDList ++ [typ], typeNameToID=Map.insert typName (length typeIDList) typeNameToID})
@@ -35,6 +37,7 @@ data Context = Context
   { typeIDList   :: [CTypeDefinition]
   , typeNameToID :: (Map Text TypeID)
   , variables    :: (Map Text TypeID)
+  , errors       :: [ReportError]
   }
 
 emptyContext :: Context
