@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import C.Parser
@@ -19,4 +20,6 @@ main = do
         Left err         -> putStrLn (show err)
         Right listOfCDef -> do
           env <- nullEnv
+          newType env "int" (CBuiltinType "int")
+          newType env "double" (CBuiltinType "double")
           checkFile env listOfCDef

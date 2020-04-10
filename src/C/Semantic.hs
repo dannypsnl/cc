@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module C.Semantic (
   nullEnv,
+  newType,
   Env,
   Context(..),
   CTypeDefinition(..),
@@ -25,7 +26,11 @@ newType envRef typName typ = do
   return ()
 
 nullEnv :: IO Env
-nullEnv = newIORef Context{typeIDList=[], typeNameToID=Map.empty, variables=Map.empty}
+nullEnv = newIORef Context{
+    typeIDList = []
+    , typeNameToID = Map.empty
+    , variables = Map.empty
+    , errors = []}
 
 type TypeID = Int
 -- CTypeDefinition is not CType
@@ -38,11 +43,4 @@ data Context = Context
   , typeNameToID :: (Map Text TypeID)
   , variables    :: (Map Text TypeID)
   , errors       :: [ReportError]
-  }
-
-emptyContext :: Context
-emptyContext = Context {
-  typeIDList=[CBuiltinType (T.pack "int")]
-  , typeNameToID=Map.fromList([(T.pack "int" , 0)])
-  , variables = Map.empty
   }
