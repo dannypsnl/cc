@@ -40,10 +40,11 @@ parseDef = parseVariableDef
 
 parseVariableDef :: Parser CDef
 parseVariableDef = do
+  pos <- getSourcePos
   typ <- parseType
   name <- parseIdentifier
   void (symbol ";")
-  return $ CVariableDef name typ
+  return $ CVariableDef pos name typ
 
 parseFunctionDef :: Parser CDef
 parseFunctionDef = do
@@ -100,7 +101,7 @@ parseParameter = do
   return (name, typ)
 
 parseType :: Parser CType
-parseType = CTypeName <$> parseIdentifier
+parseType = parseIdentifier
 
 parseIdentifier :: Parser Text
 parseIdentifier = T.pack <$> lexeme (some alphaNumChar) <?> "identifier"

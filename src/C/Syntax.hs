@@ -1,6 +1,6 @@
 module C.Syntax (
   CDef(..),
-  CType(..),
+  CType,
   CStatement(..),
   CExpr(..),
 ) where
@@ -8,8 +8,7 @@ import C.Semantic
 import Data.Text (Text)
 import Text.Megaparsec.Pos
 
-data CType = CTypeName Text
-  deriving (Eq, Show)
+type CType = Text
 
 -- C
 --
@@ -21,7 +20,7 @@ data CType = CTypeName Text
 --     char* name;
 --     int price;
 --   }
-data CDef = CVariableDef Text CType
+data CDef = CVariableDef SourcePos Text CType
   | CFunctionDef Text CType [(Text, CType)] (Maybe [CStatement])
   | CStructureDef Text [(SourcePos, Text, CType)]
   deriving (Eq, Show)
