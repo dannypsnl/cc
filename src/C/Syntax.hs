@@ -6,16 +6,16 @@ module C.Syntax (
 ) where
 import C.Semantic
 import Data.Text (Text)
+import Text.Megaparsec.Pos
 
 data CType = CTypeName Text
-  | CArrow CType [CType]
-  | CWrap CType CType
   deriving (Eq, Show)
 
 -- C
 --
 -- variable: int i;
 -- function: int add(int, int);
+--   name return_type parameters body
 -- structure:
 --   struct Car {
 --     char* name;
@@ -23,7 +23,7 @@ data CType = CTypeName Text
 --   }
 data CDef = CVariableDef Text CType
   | CFunctionDef Text CType [(Text, CType)] (Maybe [CStatement])
-  | CStructureDef Text [(Text, CType)]
+  | CStructureDef Text [(SourcePos, Text, CType)]
   deriving (Eq, Show)
 
 -- CStatement

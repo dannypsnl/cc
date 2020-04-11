@@ -7,8 +7,8 @@ import qualified Data.Text as T
 import Text.Megaparsec.Pos
 
 data ReportError = ReportError
-  { location :: SourcePos
-  , error    :: CError
+  { errorLocation :: SourcePos
+  , reportedError :: CError
   }
 
 data CError = NoTypeNamed Text

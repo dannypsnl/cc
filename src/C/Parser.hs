@@ -23,6 +23,7 @@ import Text.Megaparsec hiding (State)
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Text.Megaparsec.Error (ShowErrorComponent)
+import Text.Megaparsec.Pos
 
 instance ShowErrorComponent CError where
   showErrorComponent (NoTypeNamed txt) = "no type named: " ++ T.unpack txt
@@ -50,7 +51,7 @@ parseFunctionDef = do
   name <- parseIdentifier
   (params, pTypes) <- parens (parseParams)
   body <- parseFunctionBody
-  return $ CFunctionDef name (CArrow retTyp pTypes) params body
+  return $ CFunctionDef name retTyp params body
 
 parseFunctionBody :: Parser (Maybe [CStatement])
 parseFunctionBody = (\_ -> Nothing) <$> void (symbol ";")
@@ -79,12 +80,13 @@ parseStructureDef = do
   void (symbol ";")
   return $ CStructureDef name fields
 
-parseStructureField :: Parser (Text, CType)
+parseStructureField :: Parser (SourcePos, Text, CType)
 parseStructureField = do
+  pos <- getSourcePos
   typ <- parseType
   name <- parseIdentifier
   void (symbol ";")
-  return (name, typ)
+  return (pos, name, typ)
 
 parseParams :: Parser ([(Text, CType)], [CType])
 parseParams = do

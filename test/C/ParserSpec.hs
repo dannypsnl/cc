@@ -22,9 +22,9 @@ spec = describe "Parser" $ do
       tParse parseVariableDef `shouldFailOn` "int i"
   context "function definition" $ do
     it "pass" $ do
-      tParse parseFunctionDef "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CArrow (CTypeName "int") [(CTypeName "int"), (CTypeName "int")]) [("x", (CTypeName "int")), ("y", (CTypeName "int"))] Nothing)
+      tParse parseFunctionDef "int add(int x, int y);" `shouldParse` (CFunctionDef "add" (CTypeName "int") [("x", (CTypeName "int")), ("y", (CTypeName "int"))] Nothing)
     it "body" $ do
-      tParse parseFunctionDef "int add(int x, int y) {}" `shouldParse` (CFunctionDef "add" (CArrow ((CTypeName "int")) [(CTypeName "int"),(CTypeName "int")]) [("x", (CTypeName "int")), ("y", (CTypeName "int"))] (Just []))
+      tParse parseFunctionDef "int add(int x, int y) {}" `shouldParse` (CFunctionDef "add" (CTypeName "int") [("x", (CTypeName "int")), ("y", (CTypeName "int"))] (Just []))
     it "should failed" $ do
       tParse parseFunctionDef `shouldFailOn` ""
       -- missing name
@@ -42,7 +42,7 @@ spec = describe "Parser" $ do
       tParse parseStmt "return 1;" `shouldParse` (CReturn (Just (CInt 1)))
   context "structure definition" $ do
     it "pass" $ do
-      tParse parseStructureDef "struct Car { int price; };" `shouldParse` (CStructureDef "Car" [("price", (CTypeName "int"))])
+      tParse parseStructureDef "struct Car { int price; };" `shouldParse` (CStructureDef "Car" [((SourcePos "" (mkPos 1) (mkPos 14)), "price", (CTypeName "int"))])
     it "should failed" $ do
       tParse parseStructureDef `shouldFailOn` ""
       -- missing name
