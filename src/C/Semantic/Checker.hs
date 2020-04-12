@@ -17,8 +17,8 @@ checkCDef :: Env -> CDef -> IO ()
 checkCDef env cdef = do
   case cdef of
     CVariableDef pos varName varTypName -> do
-      lookupTypeID env pos varTypName
-      -- TODO: emit variable
+      typ <- lookupTypeID env pos varTypName
+      newVar env varName typ
       return ()
     CStructureDef structName fields -> do
       typDef <- structDefinitionFromField env fields

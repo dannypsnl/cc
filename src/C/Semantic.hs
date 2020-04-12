@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module C.Semantic (
   nullEnv,
+  newVar,
   lookupTypeID,
   newType,
   Env,
@@ -21,6 +22,12 @@ import Text.Megaparsec.Pos
 
 type Env = IORef Context
 
+newVar :: Env -> Text -> TypeID -> IO ()
+newVar envRef varName typ = do
+  env@Context{variables} <- liftIO $ readIORef envRef
+  liftIO $ writeIORef envRef (env {variables=Map.insert varName typ variables})
+  return ()
+
 newType :: Env -> Text -> CTypeDefinition -> IO ()
 newType envRef typName typ = do
   env@Context{typeIDList, typeNameToID} <- liftIO $ readIORef envRef
@@ -39,13 +46,6 @@ lookupTypeID envRef loc typName = do
       return $ -1
     Just v  -> return v
 
-nullEnv :: IO Env
-nullEnv = newIORef Context{
-    typeIDList = []
-    , typeNameToID = Map.empty
-    , variables = Map.empty
-    , errors = []}
-
 data SemiCType = SemiTypeID TypeID
   | SemiArrow TypeID [TypeID]
 
@@ -61,3 +61,10 @@ data Context = Context
   , variables    :: (Map Text TypeID)
   , errors       :: [ReportError]
   }
+
+nullEnv :: IO Env
+nullEnv = newIORef Context{
+    typeIDList = []
+    , typeNameToID = Map.empty
+    , variables = Map.empty
+    , errors = []}
