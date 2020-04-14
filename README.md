@@ -1,4 +1,4 @@
-# hscc
+# cc
 
 Another C compiler
 
