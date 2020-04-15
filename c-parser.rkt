@@ -14,7 +14,7 @@
       (lexeme/p)
       (pure keyword)))
 (define identifier/p
-  (do [id <- (many/p letter/p)]
+  (do [id <- (many+/p letter/p)]
       (lexeme/p)
       (pure (list->string id))))
 (define type/p identifier/p)
@@ -25,25 +25,41 @@
       (char/p #\;)
       (pure (CGlobalVarDef typ name))))
 
+(define struct-field/p
+  (list/p type/p identifier/p))
 (define struct-def/p
   (do (keyword/p "struct")
       [name <- identifier/p]
       (char/p #\{)
-      ;;; TODO: parse field
+      (lexeme/p)
+      [fields <- (many/p struct-field/p #:sep (char/p #\;))]
+      (lexeme/p)
       (char/p #\})
-      (pure (CStructDef name '()))))
+      (pure (CStructDef name fields))))
 
 (module+ test
   (require rackunit)
+  (require data/either)
   (require megaparsack megaparsack/text)
 
   (define (t-parse parser input-string)
-    (parse-result! (parse-string parser input-string)))
+    (parse-string parser input-string))
 
-  (check-equal? (t-parse (keyword/p "abc") "abc") "abc")
-  (check-equal? (t-parse identifier/p "a") "a")
+  (check-equal? (t-parse (keyword/p "abc") "abc") (success "abc"))
+  (check-equal? (t-parse identifier/p "a") (success "a"))
   (check-equal? (t-parse global-var-def/p "int i;")
-    (CGlobalVarDef "int" "i"))
+    (success (CGlobalVarDef "int" "i")))
   (check-equal? (t-parse struct-def/p "struct Foo {}")
-    (CStructDef "Foo" '()))
+    (success (CStructDef "Foo" '())))
+  (check-equal? (t-parse struct-def/p "struct Foo { int i; }")
+    (success
+      (CStructDef "Foo"
+        (list
+          (list "int" "i")))))
+  (check-equal? (t-parse struct-def/p "struct Foo { int i; int j; }")
+    (success
+      (CStructDef "Foo"
+        (list
+          (list "int" "i")
+          (list "int" "j")))))
   )
