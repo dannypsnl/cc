@@ -31,7 +31,7 @@
       (char/p #\{)
       ;;; TODO: parse field
       (char/p #\})
-      (pure 'struct)))
+      (pure (CStructDef name '()))))
 
 (module+ test
   (require rackunit)
@@ -45,5 +45,5 @@
   (check-equal? (t-parse global-var-def/p "int i;")
     (CGlobalVarDef "int" "i"))
   (check-equal? (t-parse struct-def/p "struct Foo {}")
-    'struct)
+    (CStructDef "Foo" '()))
   )
