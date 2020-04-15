@@ -12,7 +12,7 @@ A compiler of C subset.
 
 ```sh
 git clone git@github.com:dannypsnl/cc.git
-raco pkg install .
+raco pkg install --auto
 # Test
 raco test .
 # Build
