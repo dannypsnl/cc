@@ -14,6 +14,6 @@ jobs:
         architecture: 'x64'   # (x64 or x86), ignored on Linux
         distribution: 'full'  # or 'minimal'
         variant: 'regular'    # or 'CS' for Racket-on-Chez
-        version: 'current'        # or 'current' for the latest snapshot
+        version: '7.6'        # or 'current' for the latest snapshot
     - run: raco pkg install --auto megaparsack functional-lib  
     - run: raco test .
