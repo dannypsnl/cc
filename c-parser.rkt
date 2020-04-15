@@ -26,13 +26,16 @@
       (pure (CGlobalVarDef typ name))))
 
 (define struct-field/p
-  (list/p type/p identifier/p (char/p #\;)))
+  (do [field <- (list/p type/p identifier/p)]
+      (char/p #\;)
+      (lexeme/p)
+      (pure field)))
 (define struct-def/p
   (do (keyword/p "struct")
       [name <- identifier/p]
       (char/p #\{)
       (lexeme/p)
-      [fields <- (many/p struct-field/p )]
+      [fields <- (many/p struct-field/p)]
       (lexeme/p)
       (char/p #\})
       (pure (CStructDef name fields))))
@@ -55,7 +58,7 @@
     (success
       (CStructDef "Foo"
         (list
-          (list "int" "i" #\;)))))
+          (list "int" "i")))))
   (check-equal? (t-parse struct-def/p "struct Foo { int i; int j; }")
     (success
       (CStructDef "Foo"
