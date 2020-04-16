@@ -40,6 +40,24 @@
       (char/p #\})
       (pure (CStructDef name fields))))
 
+(define func-arg/p
+  (list/p type/p identifier/p))
+(define func-def/p
+  (do [ret-typ <- type/p]
+      [name <- identifier/p]
+      (char/p #\()
+      (lexeme/p)
+      [params <- (many/p func-arg/p #:sep (char/p #\,))]
+      (lexeme/p)
+      (char/p #\))
+      (lexeme/p)
+      (char/p #\{)
+      (lexeme/p)
+      ;;; TODO: parse statement+
+      (lexeme/p)
+      (char/p #\})
+      (pure 'func-def)))
+
 (module+ test
   (require rackunit)
   (require data/either)
@@ -65,4 +83,6 @@
         (list
           (list "int" "i")
           (list "int" "j")))))
+  (check-equal? (t-parse func-def/p "int foo() {}")
+    (success 'func-def))
   )
