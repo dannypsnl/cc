@@ -1,6 +1,6 @@
 #lang racket
 
-(provide CGlobalVarDef CStructDef)
+(provide CGlobalVarDef CStructDef CFuncDef)
 
 (struct CGlobalVarDef
   [typ name]
@@ -8,4 +8,8 @@
 
 (struct CStructDef
   [name fields]
+  #:transparent)
+
+(struct CFuncDef
+  [ret-typ name params statements]
   #:transparent)

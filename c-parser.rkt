@@ -47,7 +47,7 @@
       [name <- identifier/p]
       (char/p #\()
       (lexeme/p)
-      [params <- (many/p func-arg/p #:sep (char/p #\,))]
+      [params <- (many/p func-arg/p #:sep (list/p (char/p #\,) lexeme/p))]
       (lexeme/p)
       (char/p #\))
       (lexeme/p)
@@ -56,7 +56,7 @@
       ;;; TODO: parse statement+
       (lexeme/p)
       (char/p #\})
-      (pure 'func-def)))
+      (pure (CFuncDef ret-typ name params '()))))
 
 (module+ test
   (require rackunit)
@@ -84,5 +84,14 @@
           (list "int" "i")
           (list "int" "j")))))
   (check-equal? (t-parse func-def/p "int foo() {}")
-    (success 'func-def))
+    (success
+      (CFuncDef "int" "foo" '() '())))
+  (check-equal? (t-parse func-def/p "int foo(int x) {}")
+    (success
+      (CFuncDef "int" "foo" (list (list "int" "x"))
+        '())))
+  (check-equal? (t-parse func-def/p "int foo(int x, int y) {}")
+    (success
+      (CFuncDef "int" "foo" (list (list "int" "x") (list "int" "y"))
+        '())))
   )
