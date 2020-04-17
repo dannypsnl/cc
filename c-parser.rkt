@@ -4,6 +4,7 @@
 (require megaparsack megaparsack/text)
 
 (require "c-def.rkt")
+(require "c-context.rkt")
 
 (define lexeme/p
   ;;; lexeme would take at least one space or do nothing
@@ -17,37 +18,41 @@
   (do [id <- (many+/p letter/p)]
       (lexeme/p)
       (pure (list->string id))))
-(define type/p identifier/p)
+(define (type/p ctx)
+  (do [typ <- identifier/p]
+      (pure ((lambda ()
+        (context/lookup-type-id ctx typ))))))
 
-(define global-var-def/p
-  (do [typ <- type/p]
+(define (global-var-def/p ctx)
+  (do [typ <- (type/p ctx)]
       [name <- identifier/p]
       (char/p #\;)
       (pure (CGlobalVarDef typ name))))
 
-(define struct-field/p
-  (do [field <- (list/p type/p identifier/p)]
+(define (struct-field/p ctx)
+  (do [field <- (list/p (type/p ctx) identifier/p)]
       (char/p #\;)
       (lexeme/p)
       (pure field)))
-(define struct-def/p
+(define (struct-def/p ctx)
   (do (keyword/p "struct")
       [name <- identifier/p]
       (char/p #\{)
       (lexeme/p)
-      [fields <- (many/p struct-field/p)]
+      [fields <- (many/p (struct-field/p ctx))]
       (lexeme/p)
       (char/p #\})
       (pure (CStructDef name fields))))
 
-(define func-arg/p
-  (list/p type/p identifier/p))
+(define (func-arg/p ctx)
+  (list/p (type/p ctx) identifier/p))
 (define func-def/p
-  (do [ret-typ <- type/p]
+  (lambda (ctx)
+    (do [ret-typ <- (type/p ctx)]
       [name <- identifier/p]
       (char/p #\()
       (lexeme/p)
-      [params <- (many/p func-arg/p #:sep (list/p (char/p #\,) lexeme/p))]
+      [params <- (many/p (func-arg/p ctx) #:sep (list/p (char/p #\,) lexeme/p))]
       (lexeme/p)
       (char/p #\))
       (lexeme/p)
@@ -56,7 +61,7 @@
       ;;; TODO: parse statement+
       (lexeme/p)
       (char/p #\})
-      (pure (CFuncDef ret-typ name params '()))))
+      (pure (CFuncDef ret-typ name params '())))))
 
 (module+ test
   (require rackunit)
@@ -65,33 +70,35 @@
 
   (define (t-parse parser input-string)
     (parse-string parser input-string))
+  (define test-ctx (empty-context))
+  (context/new-type test-ctx "int")
 
   (check-equal? (t-parse (keyword/p "abc") "abc") (success "abc"))
   (check-equal? (t-parse identifier/p "a") (success "a"))
-  (check-equal? (t-parse global-var-def/p "int i;")
-    (success (CGlobalVarDef "int" "i")))
-  (check-equal? (t-parse struct-def/p "struct Foo {}")
+  (check-equal? (t-parse (global-var-def/p test-ctx) "int i;")
+    (success (CGlobalVarDef 1 "i")))
+  (check-equal? (t-parse (struct-def/p test-ctx) "struct Foo {}")
     (success (CStructDef "Foo" '())))
-  (check-equal? (t-parse struct-def/p "struct Foo { int i; }")
+  (check-equal? (t-parse (struct-def/p test-ctx) "struct Foo { int i; }")
     (success
       (CStructDef "Foo"
         (list
-          (list "int" "i")))))
-  (check-equal? (t-parse struct-def/p "struct Foo { int i; int j; }")
+          (list 1 "i")))))
+  (check-equal? (t-parse (struct-def/p test-ctx) "struct Foo { int i; int j; }")
     (success
       (CStructDef "Foo"
         (list
-          (list "int" "i")
-          (list "int" "j")))))
-  (check-equal? (t-parse func-def/p "int foo() {}")
+          (list 1 "i")
+          (list 1 "j")))))
+  (check-equal? (t-parse (func-def/p test-ctx) "int foo() {}")
     (success
-      (CFuncDef "int" "foo" '() '())))
-  (check-equal? (t-parse func-def/p "int foo(int x) {}")
+      (CFuncDef 1 "foo" '() '())))
+  (check-equal? (t-parse (func-def/p test-ctx) "int foo(int x) {}")
     (success
-      (CFuncDef "int" "foo" (list (list "int" "x"))
+      (CFuncDef 1 "foo" (list (list 1 "x"))
         '())))
-  (check-equal? (t-parse func-def/p "int foo(int x, int y) {}")
+  (check-equal? (t-parse (func-def/p test-ctx) "int foo(int x, int y) {}")
     (success
-      (CFuncDef "int" "foo" (list (list "int" "x") (list "int" "y"))
+      (CFuncDef 1 "foo" (list (list 1 "x") (list 1 "y"))
         '())))
   )
