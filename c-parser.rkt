@@ -1,5 +1,7 @@
 #lang racket
 
+(provide c-top/p)
+
 (require data/monad data/applicative)
 (require megaparsack megaparsack/text)
 
@@ -109,6 +111,13 @@
       (lexeme/p)
       (char/p #\})
       (pure (CFuncDef ret-typ name params stmts)))))
+
+(define (c-top/p ctx)
+  (do [top <- (or/p (struct-def/p ctx)
+              (func-def/p ctx)
+              (global-var-def/p ctx))]
+      (lexeme/p)
+      (pure top)))
 
 (module+ test
   (require rackunit)
