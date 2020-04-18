@@ -53,14 +53,14 @@
    (define test-ctx (empty-context))
    (context/new-type test-ctx "int")
    (context/new-type test-ctx "bool")
-   (check-eq? 2 (length (context-all-types test-ctx))))
+   (check-eq? (length (context-all-types test-ctx)) 2))
 
   (test-case
    "context/new-type would update type-id counting"
    (define test-ctx (empty-context))
    (context/new-type test-ctx "int")
    (define expect-type-id 1)
-   (check-eq? expect-type-id (context/lookup-type-id test-ctx "int")))
+   (check-eq? (context/lookup-type-id test-ctx "int") expect-type-id))
 
   (test-case
    "context/new-type would update type-id counting -- second"
@@ -68,14 +68,14 @@
    (context/new-type test-ctx "int")
    (context/new-type test-ctx "bool")
    (define expect-type-id 2)
-   (check-eq? expect-type-id (context/lookup-type-id test-ctx "bool")))
+   (check-eq? (context/lookup-type-id test-ctx "bool") expect-type-id))
 
   (test-case
    "structure type required keyword `struct` modifier"
    (define test-ctx (empty-context))
    (context/new-type test-ctx "Foo" (CStruct '()))
    (define expect-type-id 1)
-   (check-eq? expect-type-id (context/lookup-type-id test-ctx "Foo" #t)))
+   (check-eq? (context/lookup-type-id test-ctx "Foo" #t) expect-type-id))
 
   (test-case
    "infer type of expr"
