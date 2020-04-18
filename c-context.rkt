@@ -102,7 +102,6 @@
                           (context-all-types ctx (- actual-typ 1)))))))
     ([var typ] typ)))
 
-
 (module+ test
   (require rackunit)
 
