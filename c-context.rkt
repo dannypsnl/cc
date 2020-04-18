@@ -6,7 +6,9 @@
 (provide context
          empty-context
          context/new-type
-         context/lookup-type-id)
+         context/lookup-type-id
+         context/infer/type-of-expr
+         context/check/expr-has-type)
 
 (struct context
   [all-types type-name-to-id]
@@ -44,6 +46,14 @@
     ([CExpr/Bool _] (context/lookup-type-id ctx "bool"))
     ([CExpr/ID _] (raise "unimplement infer <CExpr/ID> type yet!"))
     ([CExpr/Binary _ left-expr _] (context/infer/type-of-expr ctx left-expr))))
+
+(define (context/check/expr-has-type ctx c-expr type)
+  (let ([type-of-expr (context/infer/type-of-expr ctx c-expr)])
+    (if (= type-of-expr type)
+       'ok
+       (raise (format "type mismatched, expected: ~a but got: ~a"
+                      (context-all-types ctx (- type 1))
+                      (context-all-types ctx (- type-of-expr 1)))))))
 
 (module+ test
   (require rackunit)
@@ -85,5 +95,14 @@
    (check-eq? (context/infer/type-of-expr test-ctx (CExpr/Int 1)) 1)
    (check-eq? (context/infer/type-of-expr test-ctx (CExpr/Bool #t)) 2)
    (check-eq? (context/infer/type-of-expr test-ctx (CExpr/Binary + (CExpr/Int 1) (CExpr/Int 2))) 1))
+
+  (test-case
+   "check type of expr"
+   (define test-ctx (empty-context))
+   (context/new-type test-ctx "int")
+   (context/new-type test-ctx "bool")
+   (check-eq? (context/check/expr-has-type test-ctx (CExpr/Int 1) 1) 'ok)
+   (check-eq? (context/check/expr-has-type test-ctx (CExpr/Bool #t) 2) 'ok)
+   (check-eq? (context/check/expr-has-type test-ctx (CExpr/Binary + (CExpr/Int 1) (CExpr/Int 2)) 1) 'ok))
 
   )
