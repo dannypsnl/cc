@@ -3,7 +3,11 @@
 (require data/monad data/applicative)
 (require megaparsack megaparsack/text)
 
+;;; for syntax definition
 (require "c-def.rkt")
+;;; for type definition
+(require "c-type.rkt")
+;;; for context
 (require "c-context.rkt")
 
 (define lexeme/p
@@ -19,9 +23,10 @@
       (lexeme/p)
       (pure (list->string id))))
 (define (type/p ctx)
-  (do [typ <- identifier/p]
+  (do [check-struct <- (or/p (keyword/p "struct") void/p)]
+      [typ <- identifier/p]
       (pure ((lambda ()
-        (context/lookup-type-id ctx typ))))))
+        (context/lookup-type-id ctx typ (eqv? check-struct "struct")))))))
 
 (define (global-var-def/p ctx)
   (do [typ <- (type/p ctx)]
@@ -42,7 +47,9 @@
       [fields <- (many/p (struct-field/p ctx))]
       (lexeme/p)
       (char/p #\})
-      (pure (CStructDef name fields))))
+      (pure ((lambda ()
+               (context/new-type ctx name (CStruct fields))
+               (CStructDef name fields))))))
 
 (define (func-arg/p ctx)
   (list/p (type/p ctx) identifier/p))
@@ -79,6 +86,9 @@
     (success (CGlobalVarDef 1 "i")))
   (check-equal? (t-parse (struct-def/p test-ctx) "struct Foo {}")
     (success (CStructDef "Foo" '())))
+ (check-equal? (t-parse (global-var-def/p test-ctx) "struct Foo foo;")
+    (success
+      (CGlobalVarDef 2 "foo")))
   (check-equal? (t-parse (struct-def/p test-ctx) "struct Foo { int i; }")
     (success
       (CStructDef "Foo"
