@@ -1,5 +1,6 @@
 #lang racket
 
+(require "c-def.rkt")
 (require "c-type.rkt")
 
 (provide context
@@ -37,6 +38,13 @@
        (raise (format "type ~a is not a struct, keyword `struct` should be removed" type-name))))
     type-id))
 
+(define (context/infer/type-of-expr ctx c-expr)
+  (match c-expr
+    ([CExpr/Int _] (context/lookup-type-id ctx "int"))
+    ([CExpr/Bool _] (context/lookup-type-id ctx "bool"))
+    ([CExpr/ID _] (raise "unimplement infer <CExpr/ID> type yet!"))
+    ([CExpr/Binary _ left-expr _] (context/infer/type-of-expr ctx left-expr))))
+
 (module+ test
   (require rackunit)
 
@@ -68,5 +76,14 @@
    (context/new-type test-ctx "Foo" (CStruct '()))
    (define expect-type-id 1)
    (check-eq? expect-type-id (context/lookup-type-id test-ctx "Foo" #t)))
+
+  (test-case
+   "infer type of expr"
+   (define test-ctx (empty-context))
+   (context/new-type test-ctx "int")
+   (context/new-type test-ctx "bool")
+   (check-eq? (context/infer/type-of-expr test-ctx (CExpr/Int 1)) 1)
+   (check-eq? (context/infer/type-of-expr test-ctx (CExpr/Bool #t)) 2)
+   (check-eq? (context/infer/type-of-expr test-ctx (CExpr/Binary + (CExpr/Int 1) (CExpr/Int 2))) 1))
 
   )
