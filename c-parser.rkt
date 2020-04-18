@@ -51,6 +51,46 @@
                (context/new-type ctx name (CStruct fields))
                (CStructDef name fields))))))
 
+(define expr/id/p
+  (do [name <- identifier/p]
+      (pure (CExpr/ID name))))
+(define expr/int/p
+  (do [v <- integer/p]
+      (pure (CExpr/Int v))))
+(define expr/bool/p
+  (do [v <- (or/p (string/p "true") (string/p "false"))]
+      (pure (CExpr/Bool v))))
+(define (expr/p ctx)
+  (do [expr <- (or/p expr/id/p ; id
+                     expr/int/p ; int
+                     expr/bool/p ; bool
+                     ;;; TODO: binary
+                     void/p)]
+      (pure expr)))
+(define (statement/local-var/p ctx)
+  (do [typ <- (type/p ctx)]
+      [name <- identifier/p]
+      (char/p #\=)
+      (lexeme/p)
+      [expr <- (expr/p ctx)]
+      (pure (CStmt/LocalVarDef typ name expr))))
+(define (statement/assign/p ctx)
+  (do [name <- identifier/p]
+      (char/p #\=)
+      (lexeme/p)
+      [expr <- (expr/p ctx)]
+      (pure (CStmt/Assign name expr))))
+(define (statement/return/p ctx)
+  (do (keyword/p "return")
+      [expr <- (expr/p ctx)]
+      (pure (CStmt/Return expr))))
+(define (statement/p ctx)
+  (do [stmt <- (or/p (statement/return/p ctx)
+                     (statement/assign/p ctx)
+                     (statement/local-var/p ctx)
+                     void/p)]
+      (char/p #\;)
+      (pure stmt)))
 (define (func-arg/p ctx)
   (list/p (type/p ctx) identifier/p))
 (define func-def/p
@@ -65,10 +105,10 @@
       (lexeme/p)
       (char/p #\{)
       (lexeme/p)
-      ;;; TODO: parse statement+
+      [stmts <- (many/p (statement/p ctx))]
       (lexeme/p)
       (char/p #\})
-      (pure (CFuncDef ret-typ name params '())))))
+      (pure (CFuncDef ret-typ name params stmts)))))
 
 (module+ test
   (require rackunit)
@@ -111,4 +151,12 @@
     (success
       (CFuncDef 1 "foo" (list (list 1 "x") (list 1 "y"))
         '())))
+  (check-equal? (t-parse (func-def/p test-ctx) "int foo() { return 10; }")
+    (success
+      (CFuncDef 1 "foo" '()
+        (list (CStmt/Return (CExpr/Int 10))))))
+  (check-equal? (t-parse (func-def/p test-ctx) "int id(int x) { return x; }")
+    (success
+      (CFuncDef 1 "id" (list (list 1 "x"))
+        (list (CStmt/Return (CExpr/ID "x"))))))
   )
