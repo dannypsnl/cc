@@ -27,46 +27,46 @@
 
 (define (context/lookup-type-id ctx type-name [check-struct #f])
   (let* ([type-id (hash-ref (context-type-name-to-id ctx) type-name (lambda () (raise (format "no type named ~a" type-name))))]
-        [type-definition (list-ref (context-all-types ctx) (- type-id 1))])
+         [type-definition (list-ref (context-all-types ctx) (- type-id 1))])
     (cond
       ; 1. is struct but no modifier `struct`
       ([boolean=? (and (CStruct? type-definition) (not check-struct)) #t]
-        (raise (format "type ~a is struct, must provide keyword: `struct`" type-name)))
+       (raise (format "type ~a is struct, must provide keyword: `struct`" type-name)))
       ; 1. is not struct but have modifier `struct`
       ([boolean=? (and (not (CStruct? type-definition)) check-struct) #t]
-        (raise (format "type ~a is not a struct, keyword `struct` should be removed" type-name))))
+       (raise (format "type ~a is not a struct, keyword `struct` should be removed" type-name))))
     type-id))
 
 (module+ test
   (require rackunit)
 
   (test-case
-    "context/new-type would update all-types"
-    (define test-ctx (empty-context))
-    (context/new-type test-ctx "int")
-    (context/new-type test-ctx "bool")
-    (check-eq? 2 (length (context-all-types test-ctx))))
+   "context/new-type would update all-types"
+   (define test-ctx (empty-context))
+   (context/new-type test-ctx "int")
+   (context/new-type test-ctx "bool")
+   (check-eq? 2 (length (context-all-types test-ctx))))
 
   (test-case
-    "context/new-type would update type-id counting"
-    (define test-ctx (empty-context))
-    (context/new-type test-ctx "int")
-    (define expect-type-id 1)
-    (check-eq? expect-type-id (context/lookup-type-id test-ctx "int")))
+   "context/new-type would update type-id counting"
+   (define test-ctx (empty-context))
+   (context/new-type test-ctx "int")
+   (define expect-type-id 1)
+   (check-eq? expect-type-id (context/lookup-type-id test-ctx "int")))
 
   (test-case
-    "context/new-type would update type-id counting -- second"
-    (define test-ctx (empty-context))
-    (context/new-type test-ctx "int")
-    (context/new-type test-ctx "bool")
-    (define expect-type-id 2)
-    (check-eq? expect-type-id (context/lookup-type-id test-ctx "bool")))
+   "context/new-type would update type-id counting -- second"
+   (define test-ctx (empty-context))
+   (context/new-type test-ctx "int")
+   (context/new-type test-ctx "bool")
+   (define expect-type-id 2)
+   (check-eq? expect-type-id (context/lookup-type-id test-ctx "bool")))
 
   (test-case
-    "structure type required keyword `struct` modifier"
-    (define test-ctx (empty-context))
-    (context/new-type test-ctx "Foo" (CStruct '()))
-    (define expect-type-id 1)
-    (check-eq? expect-type-id (context/lookup-type-id test-ctx "Foo" #t)))
+   "structure type required keyword `struct` modifier"
+   (define test-ctx (empty-context))
+   (context/new-type test-ctx "Foo" (CStruct '()))
+   (define expect-type-id 1)
+   (check-eq? expect-type-id (context/lookup-type-id test-ctx "Foo" #t)))
 
   )

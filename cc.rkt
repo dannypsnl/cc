@@ -7,8 +7,8 @@
 
 (define (parse-file content ctx)
   (parse-result! (parse-string
-    (many/p (c-top/p ctx))
-    content)))
+                  (many/p (c-top/p ctx))
+                  content)))
 
 (module+ main
   (require racket/cmdline)
@@ -18,7 +18,7 @@
   (context/new-type ctx "bool")
   
   (command-line
-    #:program "cc"
-    #:args (c-file)
-    (define content (file->string c-file))
-    (printf "syntax: ~a~n" (parse-file content ctx))))
+   #:program "cc"
+   #:args (c-file)
+   (define content (file->string c-file))
+   (printf "syntax: ~a~n" (parse-file content ctx))))
