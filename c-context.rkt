@@ -100,10 +100,10 @@
            [actual-typ (context/execute-rule ctx actual)])
        (if (= expect-typ actual-typ)
            'ok
-           (raise (format "~a type mismatched, expected: ~a but got: ~a"
+           (raise (format "~a type mismatched, expected: `~a` but got: `~a`"
                           (srcloc->string loc)
-                          (list-ref (context-all-types ctx) (- expect-typ 1))
-                          (list-ref (context-all-types ctx) (- actual-typ 1)))))))
+                          (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
+                          (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1))))))))
     ([var typ] typ)))
 
 (module+ test
