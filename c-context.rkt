@@ -32,12 +32,12 @@
 
 (define (env/new [parent 'no-parent])
   (env parent (make-hash '())))
-(define (env/lookup env var-name)
+(define (env/lookup env loc var-name)
   (hash-ref (env-var-name-to-type env) var-name
             (lambda ()
               (if (eqv? 'no-parent (env-parent env))
-                  (raise (format "no variable named: ~a" var-name))
-                  (env/lookup (env-parent env) var-name)))))
+                  (raise (format "~a no variable named: ~a" (srcloc->string loc) var-name))
+                  (env/lookup (env-parent env) loc var-name)))))
 (define (env/bind-var-name-with-type env var-name typ)
   (hash-set! (env-var-name-to-type env) var-name typ))
 (define (context/push-env ctx)
@@ -70,20 +70,21 @@
        (raise (format "type ~a is not a struct, keyword `struct` should be removed" type-name))))
     type-id))
 
-(define (context/infer/type-of-expr ctx c-expr)
+(define (context/infer/type-of-expr ctx loc c-expr)
   (match c-expr
     ([CExpr/Int _] (context/lookup-type-id ctx "int"))
     ([CExpr/Bool _] (context/lookup-type-id ctx "bool"))
-    ([CExpr/ID var-name] (env/lookup (context-env-ref ctx) var-name))
-    ([CExpr/Binary _ left-expr _] (context/infer/type-of-expr ctx left-expr))))
+    ([CExpr/ID var-name] (env/lookup (context-env-ref ctx) loc var-name))
+    ([CExpr/Binary _ left-expr _] (context/infer/type-of-expr ctx loc left-expr))))
 
 (struct rule/push-env [] #:transparent)
 (struct rule/pop-env [] #:transparent)
 (struct rule/bind [name typ] #:transparent)
-(struct rule/synthesis [c-expr] #:transparent)
+(struct rule/synthesis [loc c-expr] #:transparent)
 (struct rule/same-type
-  ;;; notice expected and actual are proper-rule!
-  [expected actual]
+  [loc
+   ;;; notice expected and actual are proper-rule!
+   expected actual]
   #:transparent)
 
 (define (context/execute-rule ctx rule)
@@ -91,13 +92,14 @@
     ([rule/push-env] (context/push-env ctx))
     ([rule/pop-env] (context/pop-env ctx))
     ([rule/bind name typ] (env/bind-var-name-with-type (context-env-ref ctx) name typ))
-    ([rule/synthesis expr] (context/infer/type-of-expr ctx expr))
-    ([rule/same-type expected actual]
+    ([rule/synthesis loc expr] (context/infer/type-of-expr ctx loc expr))
+    ([rule/same-type loc expected actual]
      (let ([expect-typ (context/execute-rule ctx expected)]
            [actual-typ (context/execute-rule ctx actual)])
        (if (= expect-typ actual-typ)
            'ok
-           (raise (format "type mismatched, expected: ~a but got: ~a"  
+           (raise (format "~a type mismatched, expected: ~a but got: ~a"
+                          (srcloc->string loc)
                           (context-all-types ctx (- expect-typ 1))
                           (context-all-types ctx (- actual-typ 1)))))))
     ([var typ] typ)))
