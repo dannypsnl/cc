@@ -1,5 +1,6 @@
 #lang racket
 
+(require megaparsack)
 (require "c-def.rkt")
 (require "c-context.rkt")
 
@@ -25,8 +26,8 @@
       rule))
    (checker-rules checker)))
 
-(define (checker/check-ctop checker prog)
-  (match prog
+(define (checker/check-ctop checker boxed-ctop)
+  (match (syntax-box-datum boxed-ctop)
     ([CGlobalVarDef typ name]
      (checker/add-rule checker (rule/bind name typ)))
     ([CStructDef _ _] 'ignore)
@@ -45,8 +46,8 @@
      (checker/check-stmt checker ret-typ stmt))
    statements))
 
-(define (checker/check-stmt checker ret-typ stmt)
-  (match stmt
+(define (checker/check-stmt checker ret-typ boxed-stmt)
+  (match (syntax-box-datum boxed-stmt)
     ([CStmt/LocalVarDef typ name init-expr]
      (checker/add-rule checker (rule/same-type typ (rule/synthesis init-expr)))
      (checker/add-rule checker (rule/bind name typ)))

@@ -107,15 +107,16 @@
       (lexeme/p)
       (char/p #\{)
       (lexeme/p)
-      [stmts <- (many/p (statement/p ctx))]
+      [stmts <- (many/p (syntax-box/p (statement/p ctx)))]
       (lexeme/p)
       (char/p #\})
       (pure (CFuncDef ret-typ name params stmts)))))
 
 (define (c-top/p ctx)
-  (do [top <- (or/p (struct-def/p ctx)
-                    (func-def/p ctx)
-                    (global-var-def/p ctx))]
+  (do [top <- (syntax-box/p
+               (or/p (struct-def/p ctx)
+                     (func-def/p ctx)
+                     (global-var-def/p ctx)))]
     (lexeme/p)
     (pure top)))
 
@@ -163,9 +164,15 @@
   (check-equal? (t-parse (func-def/p test-ctx) "int foo() { return 10; }")
                 (success
                  (CFuncDef 1 "foo" '()
-                           (list (CStmt/Return (CExpr/Int 10))))))
+                           (list
+                            (syntax-box
+                             (CStmt/Return (CExpr/Int 10))
+                             (srcloc 'string 1 12 13 10))))))
   (check-equal? (t-parse (func-def/p test-ctx) "int id(int x) { return x; }")
                 (success
                  (CFuncDef 1 "id" (list (list 1 "x"))
-                           (list (CStmt/Return (CExpr/ID "x"))))))
+                           (list
+                            (syntax-box
+                             (CStmt/Return (CExpr/ID "x"))
+                             (srcloc 'string 1 16 17 9))))))
   )
