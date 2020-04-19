@@ -39,6 +39,7 @@
                   (raise (format "~a no variable named: ~a" (srcloc->string loc) var-name))
                   (env/lookup (env-parent env) loc var-name)))))
 (define (env/bind-var-name-with-type env var-name typ)
+  ;;; TODO: raise exception for redefined binding
   (hash-set! (env-var-name-to-type env) var-name typ))
 (define (context/push-env ctx)
   (set-context-env-ref! ctx (env/new (context-env-ref ctx))))
@@ -100,8 +101,8 @@
            'ok
            (raise (format "~a type mismatched, expected: ~a but got: ~a"
                           (srcloc->string loc)
-                          (context-all-types ctx (- expect-typ 1))
-                          (context-all-types ctx (- actual-typ 1)))))))
+                          (list-ref (context-all-types ctx) (- expect-typ 1))
+                          (list-ref (context-all-types ctx) (- actual-typ 1)))))))
     ([var typ] typ)))
 
 (module+ test
@@ -141,8 +142,8 @@
    (define test-ctx (empty-context))
    (context/new-type test-ctx "int")
    (context/new-type test-ctx "bool")
-   (check-eq? (context/infer/type-of-expr test-ctx (CExpr/Int 1)) 1)
-   (check-eq? (context/infer/type-of-expr test-ctx (CExpr/Bool #t)) 2)
-   (check-eq? (context/infer/type-of-expr test-ctx (CExpr/Binary + (CExpr/Int 1) (CExpr/Int 2))) 1))
+   (check-eq? (context/infer/type-of-expr test-ctx (srcloc 'test 1 1 1 1) (CExpr/Int 1)) 1)
+   (check-eq? (context/infer/type-of-expr test-ctx (srcloc 'test 1 1 1 1) (CExpr/Bool #t)) 2)
+   (check-eq? (context/infer/type-of-expr test-ctx (srcloc 'test 1 1 1 1) (CExpr/Binary + (CExpr/Int 1) (CExpr/Int 2))) 1))
 
   )

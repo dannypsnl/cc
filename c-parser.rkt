@@ -63,9 +63,9 @@
   (do [v <- (or/p (string/p "true") (string/p "false"))]
     (pure (CExpr/Bool v))))
 (define (expr/p ctx)
-  (do [expr <- (or/p expr/id/p ; id
+  (do [expr <- (or/p expr/bool/p ; bool
+                     expr/id/p ; id
                      expr/int/p ; int
-                     expr/bool/p ; bool
                      ;;; TODO: binary
                      void/p)]
     (pure expr)))
