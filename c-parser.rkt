@@ -50,7 +50,7 @@
     (lexeme/p)
     (char/p #\})
     (pure ((lambda ()
-             (context/new-type ctx name (CStruct fields))
+             (context/new-type ctx name (CStruct name fields))
              (CStructDef name fields))))))
 
 (define expr/id/p

@@ -52,12 +52,13 @@
 ;;; context/new-type
 ; This function update context to remember type and update type-id
 ; type-definition default value is CBuiltin, stand for types like: "int", "bool"
-(define (context/new-type ctx type-name [type-definition (CBuiltin)])
-  ; 1. update all-types which stores all types by append type-definition into it
-  (set-context-all-types! ctx (append (context-all-types ctx) (list type-definition)))
-  ; 2. update type-name to type-id mapping
-  (let ([type-id (length (context-all-types ctx))])
-    (hash-set! (context-type-name-to-id ctx) type-name type-id)))
+(define (context/new-type ctx type-name [type-definition 'empty])
+  (let ([type-definition (if (eqv? 'empty type-definition) (CBuiltin type-name) type-definition)])
+    ; 1. update all-types which stores all types by append type-definition into it
+    (set-context-all-types! ctx (append (context-all-types ctx) (list type-definition)))
+    ; 2. update type-name to type-id mapping
+    (let ([type-id (length (context-all-types ctx))])
+      (hash-set! (context-type-name-to-id ctx) type-name type-id))))
 
 (define (context/lookup-type-id ctx type-name [check-struct #f])
   (let* ([type-id (hash-ref (context-type-name-to-id ctx) type-name (lambda () (raise (format "no type named ~a" type-name))))]
@@ -133,7 +134,7 @@
   (test-case
    "structure type required keyword `struct` modifier"
    (define test-ctx (empty-context))
-   (context/new-type test-ctx "Foo" (CStruct '()))
+   (context/new-type test-ctx "Foo" (CStruct "Foo" '()))
    (define expect-type-id 1)
    (check-eq? (context/lookup-type-id test-ctx "Foo" #t) expect-type-id))
 

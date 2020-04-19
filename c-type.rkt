@@ -4,7 +4,7 @@
          CStruct
          CStruct?)
 
-(struct CBuiltin ()
+(struct CBuiltin (name)
   #:transparent)
-(struct CStruct ([fields])
+(struct CStruct (name fields)
   #:transparent)
