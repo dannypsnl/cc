@@ -5,6 +5,7 @@
 (require "c-parser.rkt")
 (require "c-context.rkt")
 (require "c-semantic.rkt")
+(require "c-ir.rkt")
 
 (define (parse-file content ctx)
   (parse-result! (parse-string
@@ -24,8 +25,14 @@
    #:program "cc"
    #:args (c-file)
    (define content (file->string c-file))
+   (define prog (parse-file content ctx))
    (map
     (lambda (ctop)
       (checker/check-ctop checker ctop))
-    (parse-file content ctx))
-   (checker/report checker)))
+    prog)
+   (checker/report checker)
+   (map
+    (lambda (ctop)
+      (printf (CTop->IR ctop)))
+    prog)
+   (printf "~n")))
