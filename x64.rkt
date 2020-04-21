@@ -49,16 +49,18 @@
        (lambda (v) (x64->string v))
        insts)))
     ([x64/pushq reg]
-     (format "\tpushq ~a"
+     (format "\tpushq ~a~n"
              (x64->string reg)))
-    ([x64/popq reg] (x64->string reg))
+    ([x64/popq reg]
+     (format "\tpopq ~a~n"
+             (x64->string reg)))
     ([x64/movq dest src]
-     (format "\tmovq ~a ~a"
+     (format "\tmovq ~a ~a~n"
              (x64->string dest)
              (x64->string src)))
-    ([x64/retq] "\tretq")
+    ([x64/retq] "\tretq~n")
     ([x64/movl dest src]
-     (format "\tmovq ~a ~a"
+     (format "\tmovq ~a ~a~n"
              (x64->string dest)
              (x64->string src)))
     ([x64/internal/reg name shift]
