@@ -13,7 +13,7 @@
      (match v
        ("true" (x64/int 32 1))
        ("false" (x64/int 32 0))))
-    ([CExpr/ID _] 'todo-identifier (x64/int 32 1))
+    ([CExpr/ID _] 'todo-identifier)
     ([CExpr/Binary _ _ _] 'todo-binary)
     ))
 
