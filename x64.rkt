@@ -2,6 +2,7 @@
 
 (provide emit-to
          x64->string
+         x64/expr->bits
          x64/reg
          x64/int
          x64/block
@@ -34,11 +35,15 @@
 (struct x64/internal/reg [name shift])
 (define (x64/reg name [shift 0])
   (x64/internal/reg name shift))
-(struct x64/int [v])
+(struct x64/int [bits v])
 (struct x64/push [bits reg])
 (struct x64/pop [bits reg])
 (struct x64/mov [bits dest src])
 (struct x64/ret [bits])
+
+(define (x64/expr->bits expr)
+  (match expr
+    ([x64/int bits _] bits)))
 
 (define (bits->suffix bits)
   (match bits
@@ -73,4 +78,4 @@
      (if (= shift 0)
          (format "%~a" name)
          (format "~a(%~a)" shift name)))
-    ([x64/int v] (format "$~a" v))))
+    ([x64/int _ v] (format "$~a" v))))

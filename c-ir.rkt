@@ -11,9 +11,9 @@
     ([CExpr/Int v] (x64/int v))
     ([CExpr/Bool v]
      (match v
-       ("true" (x64/int 1))
-       ("false" (x64/int 0))))
-    ([CExpr/ID _] 'todo-identifier (x64/int 1))
+       ("true" (x64/int 32 1))
+       ("false" (x64/int 32 0))))
+    ([CExpr/ID _] 'todo-identifier (x64/int 32 1))
     ([CExpr/Binary _ _ _] 'todo-binary)
     ))
 
@@ -22,11 +22,9 @@
     ([CStmt/LocalVarDef _ _ _] 'todo-local-var)
     ([CStmt/Assign _ _] 'todo-assign)
     ([CStmt/Return expr]
-     ;;; TODO: use expression size instead of hardcode 32 here
-     (emit-to bb (x64/mov 32 (expr->IR expr) (x64/reg "eax")))
-     (emit-to bb (x64/ret 64)))
-    )
-  )
+     (let ([ret-expr (expr->IR expr)])
+       (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax")))
+       (emit-to bb (x64/ret 64))))))
 
 (define (CTop->IR boxed-ctop)
   (match (syntax-box-datum boxed-ctop)
