@@ -3,12 +3,12 @@
 (provide emit-to
          x64->string
          x64/reg
+         x64/int
          x64/block
-         x64/pushq
-         x64/popq
-         x64/movq
-         x64/retq
-         x64/movl)
+         x64/push
+         x64/pop
+         x64/mov
+         x64/ret)
 
 (struct x64/block
   ; e.g.
@@ -34,11 +34,16 @@
 (struct x64/internal/reg [name shift])
 (define (x64/reg name [shift 0])
   (x64/internal/reg name shift))
-(struct x64/pushq [reg])
-(struct x64/popq [reg])
-(struct x64/movq [dest src])
-(struct x64/retq [])
-(struct x64/movl [dest src])
+(struct x64/int [v])
+(struct x64/push [bits reg])
+(struct x64/pop [bits reg])
+(struct x64/mov [bits dest src])
+(struct x64/ret [bits])
+
+(define (bits->suffix bits)
+  (match bits
+    (32 "l")
+    (64 "q")))
 
 (define (x64->string any-x64-v)
   (match any-x64-v
@@ -48,22 +53,24 @@
       (map
        (lambda (v) (x64->string v))
        insts)))
-    ([x64/pushq reg]
-     (format "\tpushq ~a~n"
+    ([x64/push bits reg]
+     (format "\tpush~a ~a~n"
+             (bits->suffix bits)
              (x64->string reg)))
-    ([x64/popq reg]
-     (format "\tpopq ~a~n"
+    ([x64/pop bits reg]
+     (format "\tpop~a ~a~n"
+             (bits->suffix bits)
              (x64->string reg)))
-    ([x64/movq dest src]
-     (format "\tmovq ~a ~a~n"
+    ([x64/mov bits dest src]
+     (format "\tmov~a ~a ~a~n"
+             (bits->suffix bits)
              (x64->string dest)
              (x64->string src)))
-    ([x64/retq] "\tretq~n")
-    ([x64/movl dest src]
-     (format "\tmovq ~a ~a~n"
-             (x64->string dest)
-             (x64->string src)))
+    ([x64/ret bits]
+     (format "\tret~a~n"
+             (bits->suffix bits)))
     ([x64/internal/reg name shift]
      (if (= shift 0)
          (format "%~a" name)
-         (format "~a(%~a)" shift name)))))
+         (format "~a(%~a)" shift name)))
+    ([x64/int v] (format "$~a" v))))
