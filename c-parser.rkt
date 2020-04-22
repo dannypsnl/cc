@@ -88,10 +88,10 @@
     (pure (CStmt/Return expr))))
 (define (statement/p ctx)
   (do [stmt <- (or/p (statement/return/p ctx)
-                     (statement/assign/p ctx)
                      (statement/local-var/p ctx)
-                     void/p)]
+                     (statement/assign/p ctx))]
     (char/p #\;)
+    (lexeme/p)
     (pure stmt)))
 (define (func-arg/p ctx)
   (list/p (type/p ctx) identifier/p))

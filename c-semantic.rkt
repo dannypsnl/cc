@@ -48,7 +48,7 @@
     (match (syntax-box-datum boxed-stmt)
     ([CStmt/LocalVarDef typ name init-expr]
      (checker/add-rule checker (rule/same-type loc typ (rule/synthesis loc init-expr)))
-     (checker/add-rule checker (rule/bind name loc typ)))
+     (checker/add-rule checker (rule/bind name typ)))
     ([CStmt/Assign name expr]
      (checker/add-rule checker (rule/same-type loc (rule/synthesis loc (CExpr/ID name)) (rule/synthesis loc expr))))
     ([CStmt/Return expr]
