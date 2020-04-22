@@ -57,7 +57,7 @@
      (string-append*
       (format "_~a:~n" tag)
       (map
-       (lambda (v) (x64->string v))
+       (λ (v) (x64->string v))
        insts)))
     ([x64/push bits reg]
      (format "\tpush~a ~a~n"

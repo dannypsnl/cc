@@ -27,12 +27,12 @@
    (define content (file->string c-file))
    (define prog (parse-file content ctx))
    (map
-    (lambda (ctop)
+    (λ (ctop)
       (checker/check-ctop checker ctop))
     prog)
    (checker/report checker)
    (map
-    (lambda (ctop)
+    (λ (ctop)
       (printf (CTop->IR ctop)))
     prog)
    (printf "~n")))

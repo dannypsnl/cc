@@ -15,7 +15,7 @@
 (define lexeme/p
   ;;; lexeme would take at least one space or do nothing
   (do (or/p (many+/p space/p) void/p)
-    (pure (lambda () 'lexeme))))
+    (pure (λ () 'lexeme))))
 (define (keyword/p keyword)
   (do (string/p keyword)
     (lexeme/p)
@@ -27,7 +27,7 @@
 (define (type/p ctx)
   (do [check-struct <- (or/p (keyword/p "struct") void/p)]
     [typ <- identifier/p]
-    (pure ((lambda ()
+    (pure ((λ ()
              (context/lookup-type-id ctx typ (eqv? check-struct "struct")))))))
 
 (define (global-var-def/p ctx)
@@ -49,7 +49,7 @@
     [fields <- (many/p (struct-field/p ctx))]
     (lexeme/p)
     (char/p #\})
-    (pure ((lambda ()
+    (pure ((λ ()
              (context/new-type ctx name (CStruct name fields))
              (CStructDef name fields))))))
 
@@ -96,7 +96,7 @@
 (define (func-arg/p ctx)
   (list/p (type/p ctx) identifier/p))
 (define func-def/p
-  (lambda (ctx)
+  (λ (ctx)
     (do [ret-typ <- (type/p ctx)]
       [name <- identifier/p]
       (char/p #\()

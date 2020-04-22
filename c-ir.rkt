@@ -50,7 +50,7 @@
        (emit-to bb (x64/push 64 caller-stack))
        ; current top-of-stack is bottom of new stack frame
        (emit-to bb (x64/mov 64 (x64/reg "rsp") caller-stack))
-       (map (lambda (param)
+       (map (λ (param)
               ; TODO: get value from %edi
               (context/new-var fn-ctx
                                ; param name
@@ -58,7 +58,7 @@
                                ; location
                                (x64/reg "rbp" -4)))
             params)
-       (map (lambda (stmt)
+       (map (λ (stmt)
               (stmt->IR fn-ctx bb stmt))
             stmts)
        (emit-to bb (x64/pop 64 caller-stack))

@@ -34,7 +34,7 @@
   (env parent (make-hash '())))
 (define (env/lookup env loc var-name)
   (hash-ref (env-var-name-to-type env) var-name
-            (lambda ()
+            (λ ()
               (if (eqv? 'no-parent (env-parent env))
                   (raise (format "~a no variable named: ~a" (srcloc->string loc) var-name))
                   (env/lookup (env-parent env) loc var-name)))))
@@ -61,7 +61,7 @@
       (hash-set! (context-type-name-to-id ctx) type-name type-id))))
 
 (define (context/lookup-type-id ctx type-name [check-struct #f])
-  (let* ([type-id (hash-ref (context-type-name-to-id ctx) type-name (lambda () (raise (format "no type named ~a" type-name))))]
+  (let* ([type-id (hash-ref (context-type-name-to-id ctx) type-name (λ () (raise (format "no type named ~a" type-name))))]
          [type-definition (list-ref (context-all-types ctx) (- type-id 1))])
     (cond
       ; 1. is struct but no modifier `struct`
