@@ -87,9 +87,9 @@
     [expr <- (expr/p ctx)]
     (pure (CStmt/Return expr))))
 (define (statement/p ctx)
-  (do [stmt <- (or/p (statement/return/p ctx)
-                     (statement/local-var/p ctx)
-                     (statement/assign/p ctx))]
+  (do [stmt <- (syntax-box/p (or/p (statement/return/p ctx)
+                                   (statement/local-var/p ctx)
+                                   (statement/assign/p ctx)))]
     (char/p #\;)
     (lexeme/p)
     (pure stmt)))
@@ -107,7 +107,7 @@
       (lexeme/p)
       (char/p #\{)
       (lexeme/p)
-      [stmts <- (many/p (syntax-box/p (statement/p ctx)))]
+      [stmts <- (many/p (statement/p ctx))]
       (lexeme/p)
       (char/p #\})
       (pure (CFuncDef ret-typ name params stmts)))))
@@ -167,12 +167,12 @@
                            (list
                             (syntax-box
                              (CStmt/Return (CExpr/Int 10))
-                             (srcloc 'string 1 12 13 10))))))
+                             (srcloc 'string 1 12 13 9))))))
   (check-equal? (t-parse (func-def/p test-ctx) "int id(int x) { return x; }")
                 (success
                  (CFuncDef 1 "id" (list (list 1 "x"))
                            (list
                             (syntax-box
                              (CStmt/Return (CExpr/ID "x"))
-                             (srcloc 'string 1 16 17 9))))))
+                             (srcloc 'string 1 16 17 8))))))
   )
