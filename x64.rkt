@@ -38,12 +38,13 @@
 (struct x64/int [bits v])
 (struct x64/push [bits reg])
 (struct x64/pop [bits reg])
-(struct x64/mov [bits dest src])
+(struct x64/mov [bits src dest])
 (struct x64/ret [bits])
 
 (define (x64/expr->bits expr)
   (match expr
-    ([x64/int bits _] bits)))
+    ([x64/int bits _] bits)
+    ([x64/internal/reg _ _] 32)))
 
 (define (bits->suffix bits)
   (match bits
@@ -66,11 +67,11 @@
      (format "\tpop~a ~a~n"
              (bits->suffix bits)
              (x64->string reg)))
-    ([x64/mov bits dest src]
+    ([x64/mov bits src dest]
      (format "\tmov~a ~a ~a~n"
              (bits->suffix bits)
-             (x64->string dest)
-             (x64->string src)))
+             (x64->string src)
+             (x64->string dest)))
     ([x64/ret bits]
      (format "\tret~a~n"
              (bits->suffix bits)))
