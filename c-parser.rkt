@@ -115,8 +115,8 @@
 (define (c-top/p ctx)
   (do [top <- (syntax-box/p
                (or/p (struct-def/p ctx)
-                     (func-def/p ctx)
-                     (global-var-def/p ctx)))]
+                     (try/p (global-var-def/p ctx))
+                     (func-def/p ctx)))]
     (lexeme/p)
     (pure top)))
 
