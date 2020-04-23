@@ -17,6 +17,7 @@
   (require racket/cmdline)
 
   (define ctx (empty-context))
+  (context/new-type ctx "void")
   (context/new-type ctx "int")
   (context/new-type ctx "bool")
 
