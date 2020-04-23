@@ -39,8 +39,10 @@
                   (raise (format "~a no variable named: ~a" (srcloc->string loc) var-name))
                   (env/lookup (env-parent env) loc var-name)))))
 (define (env/bind-var-name-with-type env var-name typ)
-  ;;; TODO: raise exception for redefined binding
-  (hash-set! (env-var-name-to-type env) var-name typ))
+  (let ([env (env-var-name-to-type env)])
+    (if (hash-has-key? env var-name)
+        (raise (format "redefinition of `~a`" var-name))
+        (hash-set! env var-name typ))))
 (define (context/push-env ctx)
   (set-context-env-ref! ctx (env/new (context-env-ref ctx))))
 (define (context/pop-env ctx)
