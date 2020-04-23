@@ -7,10 +7,11 @@
 (require "c-semantic.rkt")
 (require "c-ir.rkt")
 
-(define (parse-file content ctx)
+(define (parse-file filename content ctx)
   (parse-result! (parse-string
                   (many/p (c-top/p ctx))
-                  content)))
+                  content
+                  filename)))
 
 (module+ main
   (require racket/cmdline)
@@ -25,7 +26,7 @@
    #:program "cc"
    #:args (c-file)
    (define content (file->string c-file))
-   (define prog (parse-file content ctx))
+   (define prog (parse-file c-file content ctx))
    (map
     (λ (ctop)
       (checker/check-ctop checker ctop))
