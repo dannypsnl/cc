@@ -14,7 +14,10 @@
          rule/pop-env
          rule/bind
          rule/synthesis
-         rule/same-type)
+         rule/same-type
+         ; semantic error
+         error:semantic?
+         error:semantic->string)
 
 (struct context
   [;;; type-id fundamental
@@ -30,18 +33,31 @@
   #:transparent
   #:mutable)
 
+(struct error:semantic (loc))
+(struct error:semantic:no-variable-named error:semantic (var-name))
+(struct error:semantic:redefinition error:semantic (var-name))
+(struct error:semantic:type-mismatched error:semantic (expect actual))
+(define (error:semantic->string err)
+  (match err
+    ([error:semantic:no-variable-named loc var-name] (format "~a: no variable named: ~a" (srcloc->string loc) var-name))
+    ([error:semantic:redefinition loc var-name] (format "~a: redefinition of `~a`" (srcloc->string loc) var-name))
+    ([error:semantic:type-mismatched loc expect actual]
+     (format "~a: type mismatched, expected: `~a` but got: `~a`"
+             (srcloc->string loc)
+             expect actual))))
+
 (define (env/new [parent 'no-parent])
   (env parent (make-hash '())))
 (define (env/lookup env loc var-name)
   (hash-ref (env-var-name-to-type env) var-name
             (λ ()
               (if (eqv? 'no-parent (env-parent env))
-                  (raise (format "~a no variable named: ~a" (srcloc->string loc) var-name))
+                  (raise (error:semantic:no-variable-named loc var-name))
                   (env/lookup (env-parent env) loc var-name)))))
-(define (env/bind-var-name-with-type env var-name typ)
+(define (env/bind-var-name-with-type env loc var-name typ)
   (let ([env (env-var-name-to-type env)])
     (if (hash-has-key? env var-name)
-        (raise (format "redefinition of `~a`" var-name))
+        (raise (error:semantic:redefinition loc var-name))
         (hash-set! env var-name typ))))
 (define (context/push-env ctx)
   (set-context-env-ref! ctx (env/new (context-env-ref ctx))))
@@ -83,7 +99,7 @@
 
 (struct rule/push-env [] #:transparent)
 (struct rule/pop-env [] #:transparent)
-(struct rule/bind [name typ] #:transparent)
+(struct rule/bind [loc name typ] #:transparent)
 (struct rule/synthesis [loc c-expr] #:transparent)
 (struct rule/same-type
   [loc
@@ -95,17 +111,16 @@
   (match rule
     ([rule/push-env] (context/push-env ctx))
     ([rule/pop-env] (context/pop-env ctx))
-    ([rule/bind name typ] (env/bind-var-name-with-type (context-env-ref ctx) name typ))
+    ([rule/bind loc name typ] (env/bind-var-name-with-type (context-env-ref ctx) loc name typ))
     ([rule/synthesis loc expr] (context/infer/type-of-expr ctx loc expr))
     ([rule/same-type loc expected actual]
      (let ([expect-typ (context/execute-rule ctx expected)]
            [actual-typ (context/execute-rule ctx actual)])
        (if (= expect-typ actual-typ)
            'ok
-           (raise (format "~a type mismatched, expected: `~a` but got: `~a`"
-                          (srcloc->string loc)
-                          (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
-                          (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1))))))))
+           (raise (error:semantic:type-mismatched loc
+                                                  (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
+                                                  (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1))))))))
     ([var typ] typ)))
 
 (module+ test
