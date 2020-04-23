@@ -20,7 +20,7 @@
   (context/new-type ctx "bool")
 
   (define checker (checker/new ctx))
-  
+
   (command-line
    #:program "cc"
    #:args (c-file)
