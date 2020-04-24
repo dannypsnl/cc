@@ -68,7 +68,7 @@
              (bits->suffix bits)
              (x64->string reg)))
     ([x64/mov bits src dest]
-     (format "\tmov~a ~a ~a~n"
+     (format "\tmov~a ~a, ~a~n"
              (bits->suffix bits)
              (x64->string src)
              (x64->string dest)))
