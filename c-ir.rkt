@@ -26,8 +26,7 @@
        ("true" (x64/int 32 1))
        ("false" (x64/int 32 0))))
     ([CExpr/ID var-name] (context/lookup-var ctx var-name))
-    ([CExpr/Binary _ _ _] 'todo-binary)
-    ))
+    ([CExpr/Binary _ _ _] 'todo-binary)))
 
 (define (stmt->IR ctx bb boxed-stmt)
   (match (syntax-box-datum boxed-stmt)
@@ -35,8 +34,7 @@
     ([CStmt/Assign _ _] 'todo-assign)
     ([CStmt/Return expr]
      (let ([ret-expr (expr->IR ctx expr)])
-       (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax")))
-       (emit-to bb (x64/ret 64))))))
+       (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax")))))))
 
 (define (CTop->IR boxed-ctop)
   (match (syntax-box-datum boxed-ctop)
@@ -62,4 +60,5 @@
               (stmt->IR fn-ctx bb stmt))
             stmts)
        (emit-to bb (x64/pop 64 caller-stack))
+       (emit-to bb (x64/ret 64))
        (x64->string bb)))))
