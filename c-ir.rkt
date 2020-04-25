@@ -33,22 +33,20 @@
     ([CStmt/LocalVarDef _ name expr]
      (let ([location (x64/reg "rbp" (* stack-level -4))]
            [exp (expr->IR ctx expr)])
-       (context/new-var ctx name
-                        location)
-       (emit-to bb
-                (x64/mov (x64/expr->bits exp) exp location)))
+       (context/new-var ctx name location)
+       (emit-to bb (x64/mov (x64/expr->bits exp) exp location)))
      (+ stack-level 1))
     ([CStmt/Assign name expr]
-     (let ([reg (context/lookup-var ctx name)]
+     (let ([location (context/lookup-var ctx name)]
            [exp (expr->IR ctx expr)])
-       (emit-to bb
-                (x64/mov (x64/expr->bits exp) exp reg)))
+       (emit-to bb (x64/mov (x64/expr->bits exp) exp location)))
      stack-level)
     ([CStmt/Return expr]
      (let ([ret-expr (expr->IR ctx expr)])
        (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax"))))
      stack-level)))
 
+; TODO: work with more arguments
 (define (idx->arg/reg index)
   (match index
     (1 (x64/reg "edi"))
