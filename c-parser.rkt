@@ -88,8 +88,8 @@
     (pure (CStmt/Return expr))))
 (define (statement/p ctx)
   (do [stmt <- (syntax-box/p (or/p (statement/return/p ctx)
-                                   (statement/local-var/p ctx)
-                                   (statement/assign/p ctx)))]
+                                   (try/p (statement/assign/p ctx))
+                                   (statement/local-var/p ctx)))]
     (char/p #\;)
     (lexeme/p)
     (pure stmt)))
