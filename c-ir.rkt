@@ -49,12 +49,16 @@
        ; current top-of-stack is bottom of new stack frame
        (emit-to bb (x64/mov 64 (x64/reg "rsp") caller-stack))
        (map (λ (param)
-              ; TODO: get value from %edi
-              (context/new-var fn-ctx
-                               ; param name
-                               (car (reverse param))
-                               ; location
-                               (x64/reg "rbp" -4)))
+              (let ([location (x64/reg "rbp" -4)])
+                (emit-to bb (x64/mov 32
+                                     ; TODO: more parameters?
+                                     (x64/reg "edi")
+                                     location))
+                (context/new-var fn-ctx
+                                 ; param name
+                                 (car (reverse param))
+                                 ; location
+                                 location)))
             params)
        (map (λ (stmt)
               (stmt->IR fn-ctx bb stmt))
