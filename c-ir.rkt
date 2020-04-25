@@ -20,7 +20,7 @@
 
 (define (expr->IR ctx expr)
   (match expr
-    ([CExpr/Int v] (x64/int v))
+    ([CExpr/Int v] (x64/int 32 v))
     ([CExpr/Bool v]
      (match v
        ("true" (x64/int 32 1))
@@ -28,13 +28,23 @@
     ([CExpr/ID var-name] (context/lookup-var ctx var-name))
     ([CExpr/Binary _ _ _] 'todo-binary)))
 
-(define (stmt->IR ctx bb boxed-stmt)
+(define (stmt->IR ctx bb stack-level boxed-stmt)
   (match (syntax-box-datum boxed-stmt)
-    ([CStmt/LocalVarDef _ _ _] 'todo-local-var)
-    ([CStmt/Assign _ _] 'todo-assign)
+    ([CStmt/LocalVarDef _ name expr]
+     (let ([location (x64/reg "rbp" (* stack-level -4))]
+           [exp (expr->IR ctx expr)])
+       (context/new-var ctx name
+                        location)
+       (emit-to bb
+                (x64/mov (x64/expr->bits exp) exp location)))
+     (+ stack-level 1))
+    ([CStmt/Assign _ _]
+     'todo-assign
+     stack-level)
     ([CStmt/Return expr]
      (let ([ret-expr (expr->IR ctx expr)])
-       (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax")))))))
+       (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax"))))
+     stack-level)))
 
 (define (idx->arg/reg index)
   (match index
@@ -70,7 +80,7 @@
                                  location)))
             params)
        (map (λ (stmt)
-              (stmt->IR fn-ctx bb stmt))
+              (set! i (stmt->IR fn-ctx bb i stmt)))
             stmts)
        (emit-to bb (x64/pop 64 caller-stack))
        (emit-to bb (x64/ret 64))
