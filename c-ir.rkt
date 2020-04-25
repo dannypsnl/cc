@@ -46,7 +46,6 @@
        (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax"))))
      stack-level)))
 
-; TODO: work with more arguments
 (define (idx->arg/reg index)
   (match index
     (1 (x64/reg "edi"))
@@ -54,7 +53,8 @@
     (3 (x64/reg "edx"))
     (4 (x64/reg "ecx"))
     (5 (x64/reg "r8d"))
-    (6 (x64/reg "r9d"))))
+    (6 (x64/reg "r9d"))
+    (n (x64/reg "rbp" (+ (* 8 (- n 7)) 16)))))
 
 (define (CTop->IR boxed-ctop)
   (match (syntax-box-datum boxed-ctop)
@@ -71,6 +71,7 @@
        (define i 1)
        (map (λ (param)
               (let ([location (x64/reg "rbp" (* i -4))])
+                ;; TODO: from gcc output can see that parameter after 7 is not allocated on stack frame but %eax, %r10d, %r11d
                 (emit-to bb (x64/mov 32
                                      (idx->arg/reg i)
                                      location))
