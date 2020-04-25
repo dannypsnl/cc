@@ -38,8 +38,11 @@
        (emit-to bb
                 (x64/mov (x64/expr->bits exp) exp location)))
      (+ stack-level 1))
-    ([CStmt/Assign _ _]
-     'todo-assign
+    ([CStmt/Assign name expr]
+     (let ([reg (context/lookup-var ctx name)]
+           [exp (expr->IR ctx expr)])
+       (emit-to bb
+                (x64/mov (x64/expr->bits exp) exp reg)))
      stack-level)
     ([CStmt/Return expr]
      (let ([ret-expr (expr->IR ctx expr)])
