@@ -36,6 +36,15 @@
      (let ([ret-expr (expr->IR ctx expr)])
        (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax")))))))
 
+(define (idx->arg/reg index)
+  (match index
+    (1 (x64/reg "edi"))
+    (2 (x64/reg "esi"))
+    (3 (x64/reg "edx"))
+    (4 (x64/reg "ecx"))
+    (5 (x64/reg "r8d"))
+    (6 (x64/reg "r9d"))))
+
 (define (CTop->IR boxed-ctop)
   (match (syntax-box-datum boxed-ctop)
     ([CGlobalVarDef _ _] 'todo-var)
@@ -48,16 +57,16 @@
        (emit-to bb (x64/push 64 caller-stack))
        ; current top-of-stack is bottom of new stack frame
        (emit-to bb (x64/mov 64 (x64/reg "rsp") caller-stack))
+       (define i 1)
        (map (λ (param)
-              (let ([location (x64/reg "rbp" -4)])
+              (let ([location (x64/reg "rbp" (* i -4))])
                 (emit-to bb (x64/mov 32
-                                     ; TODO: more parameters?
-                                     (x64/reg "edi")
+                                     (idx->arg/reg i)
                                      location))
+                (set! i (+ 1 i))
                 (context/new-var fn-ctx
                                  ; param name
                                  (car (reverse param))
-                                 ; location
                                  location)))
             params)
        (map (λ (stmt)
