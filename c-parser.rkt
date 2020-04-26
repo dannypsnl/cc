@@ -62,13 +62,34 @@
 (define expr/bool/p
   (do [v <- (or/p (string/p "true") (string/p "false"))]
     (pure (CExpr/Bool v))))
-(define (expr/p ctx)
-  (do [expr <- (or/p expr/bool/p ; bool
-                     expr/id/p ; id
-                     expr/int/p ; int
-                     ;;; TODO: binary
-                     void/p)]
+(define (unary/p ctx)
+  (do [expr <- (or/p expr/bool/p
+                     expr/id/p
+                     expr/int/p)]
+    (lexeme/p)
     (pure expr)))
+(define (op/p lst)
+  (or/p (one-of/p lst)
+        void/p))
+(define (binary/p high-level/p op-list)
+  (do [e <- high-level/p]
+    [es <- (many/p (do [op <- (op/p op-list)]
+                     (lexeme/p)
+                     [e <- high-level/p]
+                     (pure (list op e))))]
+    (pure (foldl
+           (λ (op+rhs lhs)
+             (let ([op (car op+rhs)]
+                   [rhs (car (reverse op+rhs))])
+               (CExpr/Binary op lhs rhs)))
+           e es))))
+(define (mul:div/p ctx)
+  (binary/p (unary/p ctx) '(#\* #\/)))
+(define (add:sub/p ctx)
+  (binary/p (mul:div/p ctx) '(#\+ #\-)))
+(define (expr/p ctx)
+  (add:sub/p ctx))
+
 (define (statement/local-var/p ctx)
   (do [typ <- (type/p ctx)]
     [name <- identifier/p]
@@ -175,4 +196,11 @@
                             (syntax-box
                              (CStmt/Return (CExpr/ID "x"))
                              (srcloc 'string 1 16 17 8))))))
+  (check-equal? (t-parse (expr/p test-ctx) "1 + 2 * 3 - 4")
+                (success
+                 (CExpr/Binary #\-
+                               (CExpr/Binary #\+
+                                             (CExpr/Int 1)
+                                             (CExpr/Binary #\* (CExpr/Int 2) (CExpr/Int 3)))
+                               (CExpr/Int 4))))
   )
