@@ -50,7 +50,9 @@
       ([CFuncDef ret-typ name params stmts]
        (map
         (λ (param)
-          (checker/add-rule checker (rule/bind loc (car (reverse param)) (car param))))
+          (match param
+            [(list type-id name)
+             (checker/add-rule checker (rule/bind loc name type-id))]))
         params)
        (checker/add-rule checker (rule/push-env))
        (map

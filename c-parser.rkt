@@ -79,9 +79,9 @@
                      (pure (list op e))))]
     (pure (foldl
            (λ (op+rhs lhs)
-             (let ([op (car op+rhs)]
-                   [rhs (car (reverse op+rhs))])
-               (CExpr/Binary op lhs rhs)))
+             (match op+rhs
+               [(list op rhs)
+                (CExpr/Binary op lhs rhs)]))
            e es))))
 (define (mul:div/p ctx)
   (binary/p (unary/p ctx) '(#\* #\/)))

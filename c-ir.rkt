@@ -76,10 +76,11 @@
                                      (idx->arg/reg i)
                                      location))
                 (set! i (+ 1 i))
-                (context/new-var fn-ctx
-                                 ; param name
-                                 (car (reverse param))
-                                 location)))
+                (match param
+                    [(list _ name)
+                     (context/new-var fn-ctx
+                                      name
+                                      location)])))
             params)
        (map (λ (stmt)
               (set! i (stmt->IR fn-ctx bb i stmt)))
