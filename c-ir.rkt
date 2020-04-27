@@ -18,7 +18,7 @@
 (define (context/lookup-var ctx var-name)
   (hash-ref (local-context-var-name-to-location ctx) var-name))
 
-(define (expr->IR ctx expr)
+(define (expr->IR ctx bb expr)
   (match expr
     ([CExpr/Int v] (x64/int 32 v))
     ([CExpr/Bool v]
@@ -26,23 +26,37 @@
        ("true" (x64/int 32 1))
        ("false" (x64/int 32 0))))
     ([CExpr/ID var-name] (context/lookup-var ctx var-name))
-    ([CExpr/Binary _ _ _] 'todo-binary)))
+    ([CExpr/Binary op l-exp r-exp]
+     (letrec ([l (expr->IR ctx bb l-exp)]
+              [bits (x64/expr->bits l)]
+              [r (expr->IR ctx bb r-exp)]
+              [eax (x64/reg "eax")])
+       (emit-to bb (x64/mov bits l eax))
+       (match op
+         [#\+
+          (emit-to bb (x64/add bits r eax))
+          eax]
+         [#\-
+          (emit-to bb (x64/sub bits r eax))
+          eax]
+         [#\* 'todo-mul]
+         [#\/ 'todo-div])))))
 
 (define (stmt->IR ctx bb stack-level boxed-stmt)
   (match (syntax-box-datum boxed-stmt)
     ([CStmt/LocalVarDef _ name expr]
      (let ([location (x64/reg "rbp" (* stack-level -4))]
-           [exp (expr->IR ctx expr)])
+           [exp (expr->IR ctx bb expr)])
        (context/new-var ctx name location)
        (emit-to bb (x64/mov (x64/expr->bits exp) exp location)))
      (+ stack-level 1))
     ([CStmt/Assign name expr]
      (let ([location (context/lookup-var ctx name)]
-           [exp (expr->IR ctx expr)])
+           [exp (expr->IR ctx bb expr)])
        (emit-to bb (x64/mov (x64/expr->bits exp) exp location)))
      stack-level)
     ([CStmt/Return expr]
-     (let ([ret-expr (expr->IR ctx expr)])
+     (let ([ret-expr (expr->IR ctx bb expr)])
        (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax"))))
      stack-level)))
 
@@ -77,10 +91,10 @@
                                      location))
                 (set! i (+ 1 i))
                 (match param
-                    [(list _ name)
-                     (context/new-var fn-ctx
-                                      name
-                                      location)])))
+                  [(list _ name)
+                   (context/new-var fn-ctx
+                                    name
+                                    location)])))
             params)
        (map (λ (stmt)
               (set! i (stmt->IR fn-ctx bb i stmt)))

@@ -9,7 +9,9 @@
          x64/push
          x64/pop
          x64/mov
-         x64/ret)
+         x64/ret
+         x64/add
+         x64/sub)
 
 (struct x64/block
   ; e.g.
@@ -40,11 +42,15 @@
 (struct x64/pop [bits reg])
 (struct x64/mov [bits src dest])
 (struct x64/ret [bits])
+(struct x64/add [bits v loc])
+(struct x64/sub [bits v loc])
 
 (define (x64/expr->bits expr)
   (match expr
     ([x64/int bits _] bits)
-    ([x64/internal/reg _ _] 32)))
+    ([x64/internal/reg _ _] 32)
+    ([x64/add bits _ _] bits)
+    ([x64/sub bits _ _] bits)))
 
 (define (bits->suffix bits)
   (match bits
@@ -75,6 +81,16 @@
     ([x64/ret bits]
      (format "\tret~a~n"
              (bits->suffix bits)))
+    ([x64/add bits v loc]
+     (format "\tadd~a ~a, ~a~n"
+             (bits->suffix bits)
+             (x64->string v)
+             (x64->string loc)))
+    ([x64/sub bits v loc]
+     (format "\tsub~a ~a, ~a~n"
+             (bits->suffix bits)
+             (x64->string v)
+             (x64->string loc)))
     ([x64/internal/reg name shift]
      (if (= shift 0)
          (format "%~a" name)
