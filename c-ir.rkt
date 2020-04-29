@@ -39,7 +39,9 @@
          [#\-
           (emit-to bb (x64/sub bits r eax))
           eax]
-         [#\* 'todo-mul]
+         [#\*
+          (emit-to bb (x64/imul bits r eax))
+          eax]
          [#\/ 'todo-div])))))
 
 (define (stmt->IR ctx bb stack-level boxed-stmt)

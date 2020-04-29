@@ -1,17 +1,11 @@
 #lang racket
 
-(provide emit-to
-         x64->string
-         x64/expr->bits
-         x64/reg
-         x64/int
-         x64/block
-         x64/push
-         x64/pop
-         x64/mov
-         x64/ret
-         x64/add
-         x64/sub)
+(provide emit-to x64/block
+         x64->string x64/expr->bits
+         x64/reg x64/int
+         x64/push x64/pop
+         x64/mov x64/ret
+         x64/add x64/sub x64/imul)
 
 (struct x64/block
   ; e.g.
@@ -44,6 +38,7 @@
 (struct x64/ret [bits])
 (struct x64/add [bits v loc])
 (struct x64/sub [bits v loc])
+(struct x64/imul [bits v loc])
 
 (define (x64/expr->bits expr)
   (match expr
@@ -88,6 +83,11 @@
              (x64->string loc)))
     ([x64/sub bits v loc]
      (format "\tsub~a ~a, ~a~n"
+             (bits->suffix bits)
+             (x64->string v)
+             (x64->string loc)))
+    ([x64/imul bits v loc]
+     (format "\timul~a ~a, ~a~n"
              (bits->suffix bits)
              (x64->string v)
              (x64->string loc)))
