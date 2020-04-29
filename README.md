@@ -17,7 +17,7 @@ A compiler of C subset. Precisely, a C subset with `bool` type extension for con
     - [x] mul
     - [x] div
   - [x] function
-    - [x] call convection
+    - [x] call convention
 
 ### Build
 
