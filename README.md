@@ -9,7 +9,7 @@ A compiler of C subset. Precisely, a C subset with `bool` type extension for con
   - [x] traveling on AST to emit rules
   - [x] rule-based checker
 - [ ] compile to x86
-  - [ ] global variabel
+  - [ ] global variable
   - [ ] structure
   - [x] integer arithmetic
     - [x] add
