@@ -5,7 +5,8 @@
          x64/reg x64/int
          x64/push x64/pop
          x64/mov x64/ret
-         x64/add x64/sub x64/imul)
+         ; integer arithmetic
+         x64/add x64/sub x64/imul x64/idiv x64/cltd)
 
 (struct x64/block
   ; e.g.
@@ -39,6 +40,8 @@
 (struct x64/add [bits v loc])
 (struct x64/sub [bits v loc])
 (struct x64/imul [bits v loc])
+(struct x64/idiv [bits v])
+(struct x64/cltd [])
 
 (define (x64/expr->bits expr)
   (match expr
@@ -91,6 +94,11 @@
              (bits->suffix bits)
              (x64->string v)
              (x64->string loc)))
+    ([x64/idiv bits v]
+     (format "\tidiv~a ~a~n"
+             (bits->suffix bits)
+             (x64->string v)))
+    ([x64/cltd] "\tcltd~n")
     ([x64/internal/reg name shift]
      (if (= shift 0)
          (format "%~a" name)

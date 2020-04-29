@@ -42,7 +42,10 @@
          [#\*
           (emit-to bb (x64/imul bits r eax))
           eax]
-         [#\/ 'todo-div])))))
+         [#\/
+          (emit-to bb (x64/cltd))
+          (emit-to bb (x64/idiv bits r))
+          eax])))))
 
 (define (stmt->IR ctx bb stack-level boxed-stmt)
   (match (syntax-box-datum boxed-stmt)
