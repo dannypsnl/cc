@@ -6,6 +6,7 @@
 (require "c-context.rkt")
 (require "c-semantic.rkt")
 (require "c-ir.rkt")
+(require "x64.rkt")
 
 (define (parse-file filename content ctx)
   (parse-result! (parse-string
@@ -33,8 +34,12 @@
       (checker/check-ctop checker ctop))
     prog)
    (checker/report checker)
-   (map
-    (λ (ctop)
-      (printf (CTop->IR ctop)))
-    prog)
+   (let ([file (x64/file '() '())]
+         [global-ctx (new-context)])
+     (map
+      (λ (ctop)
+        (CTop->IR file global-ctx ctop))
+      prog)
+     (x64/file->dump file))
+   
    (printf "~n")))

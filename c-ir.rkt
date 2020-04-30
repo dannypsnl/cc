@@ -4,19 +4,25 @@
 (require "c-def.rkt")
 (require "x64.rkt")
 
-(provide CTop->IR)
+(provide CTop->IR new-context)
 
-(struct local-context
+(struct context
   [; var-name-to-location maps "int x = 1;" such local variable's name(in case is "x") to stack frame location
-   var-name-to-location]
+   ; or global variable, e.g. `int c;` to `_c@GOTPCREL(%rip)`
+   var-name-to-location
+   parent]
   #:transparent
   #:mutable)
-(define (new-context)
-  (local-context (make-hash '())))
+(define (new-context [parent 'no-parent])
+  (context (make-hash '()) parent))
 (define (context/new-var ctx var-name location)
-  (hash-set! (local-context-var-name-to-location ctx) var-name location))
+  (hash-set! (context-var-name-to-location ctx) var-name location))
 (define (context/lookup-var ctx var-name)
-  (hash-ref (local-context-var-name-to-location ctx) var-name))
+  (hash-ref (context-var-name-to-location ctx) var-name
+            (λ ()
+              (if (eqv? 'no-parent (context-parent ctx))
+                  (raise (format "no variable named: ~a, semantic checker must has a bug" var-name))
+                  (context/lookup-var (context-parent ctx) var-name)))))
 
 (define (expr->IR ctx bb expr)
   (match expr
@@ -75,13 +81,15 @@
     (6 (x64/reg "r9d"))
     (n (x64/reg "rbp" (+ (* 8 (- n 7)) 16)))))
 
-(define (CTop->IR boxed-ctop)
+(define (CTop->IR file global-ctx boxed-ctop)
   (match (syntax-box-datum boxed-ctop)
-    ([CGlobalVarDef _ _] 'todo-var)
+    ([CGlobalVarDef _ name]
+     (context/new-var global-ctx name (x64/global-ref name))
+     (add-global-var file (x64/global-var name)))
     ([CStructDef _ _] 'todo-struct)
-    ([CFuncDef ret-typ name params stmts]
+    ([CFuncDef _ name params stmts]
      (let ([bb (x64/block name '())]
-           [fn-ctx (new-context)]
+           [fn-ctx (new-context global-ctx)]
            [caller-stack (x64/reg "rbp")])
        ; save caller stack
        (emit-to bb (x64/push 64 caller-stack))
@@ -106,4 +114,4 @@
             stmts)
        (emit-to bb (x64/pop 64 caller-stack))
        (emit-to bb (x64/ret 64))
-       (x64->string bb)))))
+       (add-func file bb)))))

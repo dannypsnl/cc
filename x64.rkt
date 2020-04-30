@@ -1,6 +1,10 @@
 #lang racket
 
-(provide emit-to x64/block
+(provide x64/file x64/file->dump add-func add-global-var
+         ; global variable
+         x64/global-ref x64/global-var
+         ; func
+         emit-to x64/block
          x64->string x64/expr->bits
          x64/reg x64/int
          x64/push x64/pop
@@ -8,6 +12,26 @@
          ; integer arithmetic
          x64/add x64/sub x64/imul x64/idiv x64/cltd)
 
+(struct x64/file
+  [functions
+   global-vars]
+  #:transparent
+  #:mutable)
+(define (add-func file fn)
+  (set-x64/file-functions! file (append (x64/file-functions file) (list fn))))
+(define (add-global-var file gv)
+  (set-x64/file-global-vars! file (append (x64/file-global-vars file) (list gv))))
+(define (x64/file->dump file)
+  (map
+   (λ (f)
+     (printf (x64->string f)))
+   (x64/file-functions file))
+  (map
+   (λ (g)
+     (printf (x64->string g)))
+   (x64/file-global-vars file)))
+
+(struct x64/global-var [name] #:transparent)
 (struct x64/block
   ; e.g.
   ; ```
@@ -32,6 +56,7 @@
 (struct x64/internal/reg [name shift])
 (define (x64/reg name [shift 0])
   (x64/internal/reg name shift))
+(struct x64/global-ref [name])
 (struct x64/int [bits v])
 (struct x64/push [bits reg])
 (struct x64/pop [bits reg])
@@ -48,7 +73,8 @@
     ([x64/int bits _] bits)
     ([x64/internal/reg _ _] 32)
     ([x64/add bits _ _] bits)
-    ([x64/sub bits _ _] bits)))
+    ([x64/sub bits _ _] bits)
+    ([x64/global-ref _] 32)))
 
 (define (bits->suffix bits)
   (match bits
@@ -103,4 +129,6 @@
      (if (= shift 0)
          (format "%~a" name)
          (format "~a(%~a)" shift name)))
-    ([x64/int _ v] (format "$~a" v))))
+    ([x64/int _ v] (format "$~a" v))
+    ([x64/global-ref name] (format "_~a@GOTPCREL(%rip)" name))
+    ([x64/global-var name] (format "\t.comm _~a,4,2~n" name))))
