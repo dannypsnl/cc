@@ -21,13 +21,13 @@ A compiler of C subset. Precisely, a C subset with `bool` type extension for con
   - [x] function
     - [x] call convention
 
-### Build
+### Usage
 
 ```sh
 git clone git@github.com:dannypsnl/cc.git
 raco pkg install --auto
 # Test
 raco test .
-# Build
-raco exe main.rkt
+# Run
+racket main.rkt <c-file>
 ```
