@@ -83,12 +83,15 @@
                [(list op rhs)
                 (CExpr/Binary op lhs rhs)]))
            e es))))
-(define (mul:div/p ctx)
-  (binary/p (unary/p ctx) '(#\* #\/)))
-(define (add:sub/p ctx)
-  (binary/p (mul:div/p ctx) '(#\+ #\-)))
-(define (expr/p ctx)
-  (add:sub/p ctx))
+(define (table/p base/p list-of-op-list)
+  (if (empty? list-of-op-list)
+      base/p
+      (table/p (λ (ctx)
+                 (binary/p (base/p ctx) (car list-of-op-list))) (cdr list-of-op-list))))
+(define expr/p
+  (table/p unary/p
+           '((#\* #\/)
+             (#\+ #\-))))
 
 (define (statement/local-var/p ctx)
   (do [typ <- (type/p ctx)]
