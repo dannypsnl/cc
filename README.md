@@ -36,7 +36,7 @@ I may do these features in the future or not. But welcome any PRs for these.
 ### Usage
 
 ```sh
-git clone git@github.com:dannypsnl/cc.git
+git clone https://github.com/racket-tw/cc.git
 raco pkg install --auto
 # Test
 raco test .
