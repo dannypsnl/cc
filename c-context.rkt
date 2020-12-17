@@ -125,8 +125,7 @@
     ([rule/same-type loc expected actual]
      (let ([expect-typ (context/execute-rule ctx expected)]
            [actual-typ (context/execute-rule ctx actual)])
-       (if (= expect-typ actual-typ)
-           'ok
+       (unless (= expect-typ actual-typ)
            (raise (error:semantic:type-mismatched loc
                                                   (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
                                                   (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1))))))))
