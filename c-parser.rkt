@@ -62,7 +62,7 @@
 (define expr/bool/p
   (do [v <- (or/p (string/p "true") (string/p "false"))]
     (pure (CExpr/Bool v))))
-(define (unary/p ctx)
+(define unary/p
   (do [expr <- (or/p expr/bool/p
                      expr/id/p
                      expr/int/p)]
@@ -86,8 +86,7 @@
 (define (table/p base/p list-of-op-list)
   (if (empty? list-of-op-list)
       base/p
-      (table/p (λ (ctx)
-                 (binary/p (base/p ctx) (car list-of-op-list))) (cdr list-of-op-list))))
+      (table/p (binary/p base/p (car list-of-op-list)) (cdr list-of-op-list))))
 (define expr/p
   (table/p unary/p
            '((#\* #\/)
@@ -98,21 +97,21 @@
     [name <- identifier/p]
     (char/p #\=)
     (lexeme/p)
-    [expr <- (expr/p ctx)]
+    [expr <- expr/p]
     (pure (CStmt/LocalVarDef typ name expr))))
-(define (statement/assign/p ctx)
+(define statement/assign/p
   (do [name <- identifier/p]
     (char/p #\=)
     (lexeme/p)
-    [expr <- (expr/p ctx)]
+    [expr <- expr/p]
     (pure (CStmt/Assign name expr))))
-(define (statement/return/p ctx)
+(define statement/return/p
   (do (keyword/p "return")
-    [expr <- (expr/p ctx)]
+    [expr <- expr/p]
     (pure (CStmt/Return expr))))
 (define (statement/p ctx)
-  (do [stmt <- (syntax-box/p (or/p (statement/return/p ctx)
-                                   (try/p (statement/assign/p ctx))
+  (do [stmt <- (syntax-box/p (or/p statement/return/p
+                                   (try/p statement/assign/p)
                                    (statement/local-var/p ctx)))]
     (char/p #\;)
     (lexeme/p)
@@ -199,7 +198,7 @@
                             (syntax-box
                              (CStmt/Return (CExpr/ID "x"))
                              (srcloc 'string 1 16 17 8))))))
-  (check-equal? (t-parse (expr/p test-ctx) "1 + 2 * 3 - 4")
+  (check-equal? (t-parse expr/p "1 + 2 * 3 - 4")
                 (success
                  (CExpr/Binary #\-
                                (CExpr/Binary #\+
