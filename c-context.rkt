@@ -179,6 +179,4 @@
    (context/new-type test-ctx "bool")
    (check-eq? (context/infer/type-of-expr test-ctx (srcloc 'test 1 1 1 1) (CExpr/Int 1)) 1)
    (check-eq? (context/infer/type-of-expr test-ctx (srcloc 'test 1 1 1 1) (CExpr/Bool #t)) 2)
-   (check-eq? (context/infer/type-of-expr test-ctx (srcloc 'test 1 1 1 1) (CExpr/Binary + (CExpr/Int 1) (CExpr/Int 2))) 1))
-
-  )
+   (check-eq? (context/infer/type-of-expr test-ctx (srcloc 'test 1 1 1 1) (CExpr/Binary + (CExpr/Int 1) (CExpr/Int 2))) 1)))

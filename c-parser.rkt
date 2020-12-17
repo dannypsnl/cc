@@ -216,5 +216,4 @@
                                (CExpr/Binary #\+
                                              (CExpr/Int 1)
                                              (CExpr/Binary #\* (CExpr/Int 2) (CExpr/Int 3)))
-                               (CExpr/Int 4))))
-  )
+                               (CExpr/Int 4)))))
