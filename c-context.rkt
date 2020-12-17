@@ -170,7 +170,7 @@
    (define test-ctx (empty-context))
    (context/new-type test-ctx "Foo" (CStruct "Foo" '()))
    (define expect-type-id 1)
-   (check-eq? (context/lookup-type-id test-ctx "Foo" #t) expect-type-id))
+   (check-eq? (context/lookup-type-id test-ctx "Foo" #:struct? #t) expect-type-id))
 
   (test-case
    "infer type of expr"
