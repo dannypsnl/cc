@@ -121,6 +121,7 @@
     (pure (CStmt/Return expr))))
 (define (statement/p ctx)
   (do [stmt <- (syntax-box/p (or/p statement/return/p
+                                   (try/p expr/call/p)
                                    (try/p statement/assign/p)
                                    (statement/local-var/p ctx)))]
     (char/p #\;)
