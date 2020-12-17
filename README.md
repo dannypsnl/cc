@@ -2,7 +2,7 @@
 
 ![Build Status](https://github.com/dannypsnl/cc/workflows/Racket/badge.svg?branch=master)
 
-A compiler of C subset. Precisely, a C subset with `bool` type extension for convenience, but without control flow since its not the point I create this toy project. The most important stuff is understanding how x86-64 instructions work with call convention. Therefore, skip the control flow implementation, but still welcome to any pull-requests for control flow.
+A compiler of C subset. Precisely, a C subset with `bool` type extension for convenience, but without control flow since that is not the point of this toy project. The most important stuff is understanding how x86-64 instructions work with call convention. Therefore, skip the control flow implementation, but still welcome to any pull-requests for control flow.
 
 ### Purpose
 
