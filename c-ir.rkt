@@ -96,22 +96,20 @@
        ; current top-of-stack is bottom of new stack frame
        (emit-to bb (x64/mov 64 (x64/reg "rsp") caller-stack))
        (define i 1)
-       (map (λ (param)
-              (let ([location (x64/reg "rbp" (* i -4))])
-                ;; TODO: from gcc output can see that parameter after 7 is not allocated on stack frame but %eax, %r10d, %r11d
-                (emit-to bb (x64/mov 32
-                                     (idx->arg/reg i)
-                                     location))
-                (set! i (+ 1 i))
-                (match param
-                  [(list _ name)
-                   (context/new-var fn-ctx
-                                    name
-                                    location)])))
-            params)
-       (map (λ (stmt)
-              (set! i (stmt->IR fn-ctx bb i stmt)))
-            stmts)
+       (for ([param params])
+         (let ([location (x64/reg "rbp" (* i -4))])
+           ;; TODO: from gcc output can see that parameter after 7 is not allocated on stack frame but %eax, %r10d, %r11d
+           (emit-to bb (x64/mov 32
+                                (idx->arg/reg i)
+                                location))
+           (set! i (+ 1 i))
+           (match param
+             [(list _ name)
+              (context/new-var fn-ctx
+                               name
+                               location)])))
+       (for ([stmt stmts])
+         (set! i (stmt->IR fn-ctx bb i stmt)))
        (emit-to bb (x64/pop 64 caller-stack))
        (emit-to bb (x64/ret 64))
        (add-func file bb)))))
