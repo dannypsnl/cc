@@ -26,13 +26,13 @@
 
 (define (expr->IR ctx bb expr)
   (match expr
-    ([CExpr/Int v] (x64/int 32 v))
-    ([CExpr/Bool v]
+    [(CExpr/Int v) (x64/int 32 v)]
+    [(CExpr/Bool v)
      (match v
-       ("true" (x64/int 32 1))
-       ("false" (x64/int 32 0))))
-    ([CExpr/ID var-name] (context/lookup-var ctx var-name))
-    ([CExpr/Binary op l-exp r-exp]
+       ["true" (x64/int 32 1)]
+       ["false" (x64/int 32 0)])]
+    [(CExpr/ID var-name) (context/lookup-var ctx var-name)]
+    [(CExpr/Binary op l-exp r-exp)
      (letrec ([l (expr->IR ctx bb l-exp)]
               [bits (x64/expr->bits l)]
               [r (expr->IR ctx bb r-exp)]
@@ -51,43 +51,43 @@
          [#\/
           (emit-to bb (x64/cltd))
           (emit-to bb (x64/idiv bits r))
-          eax])))))
+          eax]))]))
 
 (define (stmt->IR ctx bb stack-level boxed-stmt)
   (match (syntax-box-datum boxed-stmt)
-    ([CStmt/LocalVarDef _ name expr]
+    [(CStmt/LocalVarDef _ name expr)
      (let ([location (x64/reg "rbp" (* stack-level -4))]
            [exp (expr->IR ctx bb expr)])
        (context/new-var ctx name location)
        (emit-to bb (x64/mov (x64/expr->bits exp) exp location)))
-     (+ stack-level 1))
-    ([CStmt/Assign name expr]
+     (+ stack-level 1)]
+    [(CStmt/Assign name expr)
      (let ([location (context/lookup-var ctx name)]
            [exp (expr->IR ctx bb expr)])
        (emit-to bb (x64/mov (x64/expr->bits exp) exp location)))
-     stack-level)
-    ([CStmt/Return expr]
+     stack-level]
+    [(CStmt/Return expr)
      (let ([ret-expr (expr->IR ctx bb expr)])
        (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax"))))
-     stack-level)))
+     stack-level]))
 
 (define (idx->arg/reg index)
   (match index
-    (1 (x64/reg "edi"))
-    (2 (x64/reg "esi"))
-    (3 (x64/reg "edx"))
-    (4 (x64/reg "ecx"))
-    (5 (x64/reg "r8d"))
-    (6 (x64/reg "r9d"))
-    (n (x64/reg "rbp" (+ (* 8 (- n 7)) 16)))))
+    [1 (x64/reg "edi")]
+    [2 (x64/reg "esi")]
+    [3 (x64/reg "edx")]
+    [4 (x64/reg "ecx")]
+    [5 (x64/reg "r8d")]
+    [6 (x64/reg "r9d")]
+    [n (x64/reg "rbp" (+ (* 8 (- n 7)) 16))]))
 
 (define (CTop->IR file global-ctx boxed-ctop)
   (match (syntax-box-datum boxed-ctop)
-    ([CGlobalVarDef _ name]
+    [(CGlobalVarDef _ name)
      (context/new-var global-ctx name (x64/global-ref name))
-     (add-global-var file (x64/global-var name)))
-    ([CStructDef _ _] 'todo-struct)
-    ([CFuncDef _ name params stmts]
+     (add-global-var file (x64/global-var name))]
+    [(CStructDef _ _) 'todo-struct]
+    [(CFuncDef _ name params stmts)
      (let ([bb (x64/block name '())]
            [fn-ctx (new-context global-ctx)]
            [caller-stack (x64/reg "rbp")])
@@ -112,4 +112,4 @@
          (set! i (stmt->IR fn-ctx bb i stmt)))
        (emit-to bb (x64/pop 64 caller-stack))
        (emit-to bb (x64/ret 64))
-       (add-func file bb)))))
+       (add-func file bb))]))
