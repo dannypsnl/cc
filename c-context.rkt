@@ -15,6 +15,7 @@
          rule/bind
          rule/synthesis
          rule/same-type
+         rule/apply
          ; semantic error
          error:semantic?
          error:semantic->string)
@@ -97,7 +98,8 @@
     ([CExpr/Int _] (context/lookup-type-id ctx "int"))
     ([CExpr/Bool _] (context/lookup-type-id ctx "bool"))
     ([CExpr/ID var-name] (env/lookup (context-env-ref ctx) loc var-name))
-    ([CExpr/Binary _ left-expr _] (context/infer/type-of-expr ctx loc left-expr))))
+    ([CExpr/Binary _ left-expr _] (context/infer/type-of-expr ctx loc left-expr))
+    ([CExpr/Call f _] (CFunction-ret (context/infer/type-of-expr ctx loc f)))))
 
 (struct rule/push-env [] #:transparent)
 (struct rule/pop-env [] #:transparent)
@@ -107,6 +109,11 @@
   [loc
    ;;; notice expected and actual are proper-rule!
    expected actual]
+  #:transparent)
+(struct rule/apply
+  [loc
+   synthe-function ;; rule
+   arg*]
   #:transparent)
 
 (define (context/execute-rule ctx rule)
@@ -123,6 +130,15 @@
            (raise (error:semantic:type-mismatched loc
                                                   (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
                                                   (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1))))))))
+    ([rule/apply loc synthe-function arg*]
+     (let ([function-type (context/execute-rule ctx synthe-function)])
+       (for ([arg arg*]
+             [expect-typ (CFunction-param* function-type)])
+         (define actual-typ (context/execute-rule ctx (rule/synthesis loc arg)))
+         (unless (= expect-typ actual-typ)
+            (raise (error:semantic:type-mismatched loc
+                                                  (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
+                                                  (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1)))))))))
     ([var typ] typ)))
 
 (module+ test

@@ -1,13 +1,15 @@
 #lang racket
 
-(provide CBuiltin
-         CStruct
-         CStruct?
+(provide (struct-out CBuiltin)
+         (struct-out CStruct)
+         (struct-out CFunction)
          type-definition->string)
 
 (struct CBuiltin (name)
   #:transparent)
 (struct CStruct (name fields)
+  #:transparent)
+(struct CFunction (ret param*)
   #:transparent)
 
 (define (type-definition->string typ-def)
