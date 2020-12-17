@@ -1,6 +1,6 @@
 # cc
 
-![Build Status](https://github.com/dannypsnl/cc/workflows/Racket/badge.svg?branch=master)
+![Build Status](https://github.com/dannypsnl/cc/workflows/Racket/badge.svg?branch=develop)
 
 A compiler of C subset. Precisely, a C subset with `bool` type extension for convenience, but without control flow since that is not the point of this toy project. The most important stuff is understanding how x86-64 instructions work with call convention. Therefore, skip the control flow implementation, but still welcome to any pull-requests for control flow.
 
