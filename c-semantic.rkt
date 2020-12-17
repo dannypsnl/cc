@@ -49,10 +49,10 @@
        (checker/add-rule checker (rule/bind loc name typ)))
       ([CStructDef _ _] 'ignore)
       ([CFuncDef ret-typ name param* stmt*]
+       (checker/add-rule checker (rule/push-env))
        (for ([param param*])
          (match-let ([(list type-id name) param])
            (checker/add-rule checker (rule/bind loc name type-id))))
-       (checker/add-rule checker (rule/push-env))
        (for ([stmt stmt*])
          (checker/check-stmt checker ret-typ stmt))
        (checker/add-rule checker (rule/pop-env))
