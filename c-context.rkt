@@ -1,7 +1,7 @@
 #lang racket
 
-(require "c-def.rkt")
-(require "c-type.rkt")
+(require "c-def.rkt"
+         "c-type.rkt")
 
 (provide context
          ; for context prepare
@@ -78,16 +78,18 @@
     (let ([type-id (length (context-all-types ctx))])
       (hash-set! (context-type-name-to-id ctx) type-name type-id))))
 
-(define (context/lookup-type-id ctx type-name [check-struct #f])
-  (let* ([type-id (hash-ref (context-type-name-to-id ctx) type-name (λ () (raise (format "no type named ~a" type-name))))]
+(define (context/lookup-type-id ctx type-name
+                                #:loc [loc ""]
+                                #:struct? [check-struct #f])
+  (let* ([type-id (hash-ref (context-type-name-to-id ctx) type-name (λ () (raise (format "~a no type named ~a" loc type-name))))]
          [type-definition (list-ref (context-all-types ctx) (- type-id 1))])
     (cond
       ; 1. is struct but no modifier `struct`
       ([boolean=? (and (CStruct? type-definition) (not check-struct)) #t]
-       (raise (format "type ~a is struct, must provide keyword: `struct`" type-name)))
+       (raise (format "~a type ~a is struct, must provide keyword: `struct`" loc type-name)))
       ; 1. is not struct but have modifier `struct`
       ([boolean=? (and (not (CStruct? type-definition)) check-struct) #t]
-       (raise (format "type ~a is not a struct, keyword `struct` should be removed" type-name))))
+       (raise (format "~a type ~a is not a struct, keyword `struct` should be removed" loc type-name))))
     type-id))
 
 (define (context/infer/type-of-expr ctx loc c-expr)

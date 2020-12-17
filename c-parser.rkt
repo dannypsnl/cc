@@ -5,12 +5,12 @@
 (require data/monad data/applicative)
 (require megaparsack megaparsack/text)
 
-;;; for syntax definition
-(require "c-def.rkt")
-;;; for type definition
-(require "c-type.rkt")
-;;; for context
-(require "c-context.rkt")
+;; for syntax definition
+(require "c-def.rkt"
+         ;; for type definition
+         "c-type.rkt"
+         ;; for context
+         "c-context.rkt")
 
 (define lexeme/p
   ;;; lexeme would take at least one space or do nothing
@@ -26,9 +26,11 @@
     (pure (list->string id))))
 (define (type/p ctx)
   (do [check-struct <- (or/p (keyword/p "struct") void/p)]
-    [typ <- identifier/p]
+    [typ <- (syntax-box/p identifier/p)]
     (pure ((λ ()
-             (context/lookup-type-id ctx typ (eqv? check-struct "struct")))))))
+             (context/lookup-type-id ctx (syntax-box-datum typ)
+                                     #:loc (srcloc->string (syntax-box-srcloc typ))
+                                     #:struct? (eqv? check-struct "struct")))))))
 
 (define (global-var-def/p ctx)
   (do [typ <- (type/p ctx)]
