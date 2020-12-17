@@ -9,7 +9,8 @@
          CExpr/ID
          CExpr/Int
          CExpr/Bool
-         CExpr/Binary)
+         CExpr/Binary
+         CExpr/Call)
 
 (struct CGlobalVarDef
   [type-id name]
@@ -30,3 +31,4 @@
 (struct CExpr/Int [v] #:transparent)
 (struct CExpr/Bool [v] #:transparent)
 (struct CExpr/Binary [op l-expr r-expr] #:transparent)
+(struct CExpr/Call [f args] #:transparent)

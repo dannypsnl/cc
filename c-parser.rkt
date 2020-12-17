@@ -62,6 +62,14 @@
 (define expr/bool/p
   (do [v <- (or/p (string/p "true") (string/p "false"))]
     (pure (CExpr/Bool v))))
+(define expr/call/p
+  (do [f <- identifier/p]
+    (char/p #\()
+    (lexeme/p)
+    [args <- (many/p expr/p #:sep (list/p (char/p #\,) lexeme/p))]
+    (lexeme/p)
+    (char/p #\))
+    (pure (CExpr/Call f args))))
 (define unary/p
   (do [expr <- (or/p expr/bool/p
                      expr/id/p
