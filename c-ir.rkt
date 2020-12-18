@@ -69,7 +69,9 @@
     [(CStmt/Return expr)
      (let ([ret-expr (expr->IR ctx bb expr)])
        (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax"))))
-     stack-level]))
+     stack-level]
+    [(CExpr/Call f arg*)
+     (emit-to bb (x64/call 64 f))]))
 
 (define (idx->arg/reg index)
   (match index

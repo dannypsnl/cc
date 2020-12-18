@@ -8,7 +8,7 @@
          x64->string x64/expr->bits
          x64/reg x64/int
          x64/push x64/pop
-         x64/mov x64/ret
+         x64/mov x64/ret x64/call
          ; integer arithmetic
          x64/add x64/sub x64/imul x64/idiv x64/cltd)
 
@@ -62,6 +62,7 @@
 (struct x64/pop [bits reg])
 (struct x64/mov [bits src dest])
 (struct x64/ret [bits])
+(struct x64/call [bits f])
 (struct x64/add [bits v loc])
 (struct x64/sub [bits v loc])
 (struct x64/imul [bits v loc])
@@ -105,6 +106,8 @@
     ([x64/ret bits]
      (format "\tret~a~n"
              (bits->suffix bits)))
+    [(x64/call bits f) (format "\tcall~a~n"
+                               (bits->suffix bits))]
     ([x64/add bits v loc]
      (format "\tadd~a ~a, ~a~n"
              (bits->suffix bits)
