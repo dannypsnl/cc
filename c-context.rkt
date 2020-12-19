@@ -1,5 +1,6 @@
 #lang racket
 
+(require megaparsack)
 (require reporter)
 (require "c-def.rkt"
          "c-type.rkt")
@@ -36,46 +37,51 @@
   #:mutable)
 
 (struct error:semantic (loc))
-(struct error:semantic:no-variable-named error:semantic (var-name))
-(struct error:semantic:redefinition error:semantic (var-name))
-(struct error:semantic:type-mismatched error:semantic (expect actual))
+(struct error:semantic:no-variable-named error:semantic (var))
+(struct error:semantic:redefinition error:semantic (prev cur))
+(struct error:semantic:type-mismatched error:semantic (expect-loc actual-loc expect actual))
 (define (error:semantic->report err)
   (match err
-    [(error:semantic:no-variable-named loc var-name)
-     (new-report
+    [(error:semantic:no-variable-named loc var)
+     (report
        #:error-code "E0001"
        #:message "variable not found"
        #:target loc
-       #:labels '()
-       #:hint (format "no variable named: `~a`" var-name))]
-    [(error:semantic:redefinition loc var-name)
-     (new-report
+       #:labels (list (label (syntax-box-srcloc var) "not found" #:color (color:red)))
+       #:hint (format "no variable named: `~a`" (syntax-box-datum var)))]
+    [(error:semantic:redefinition loc prev cur)
+     (report
        #:error-code "E0002"
        #:message "redefine"
        #:target loc
-       #:labels '()
-       #:hint (format "redefintion of `~a`" var-name))]
-    [(error:semantic:type-mismatched loc expect actual)
-     (new-report
+       #:labels (list (label (syntax-box-srcloc prev) "previous definition")
+                      (label (syntax-box-srcloc cur) "current definition"))
+       #:hint (format "redefintion of `~a`" (syntax-box-datum cur)))]
+    [(error:semantic:type-mismatched loc expect-loc actual-loc expect actual)
+     (report
        #:error-code "E0003"
        #:message "type mismatched"
        #:target loc
-       #:labels '()
+       #:labels (list (label expect-loc (format "expect: ~a" expect))
+                      (label actual-loc (format "actual: ~a" actual)))
        #:hint (format "expected: `~a` but got: `~a`" expect actual))]))
 
 (define (env/new [parent 'no-parent])
   (env parent (make-hash '())))
-(define (env/lookup env loc var-name)
+(define (env/lookup env var)
+  (define var-name (syntax-box-datum var))
   (hash-ref (env-var-name-to-type env) var-name
             (λ ()
               (if (eqv? 'no-parent (env-parent env))
-                  (raise (error:semantic:no-variable-named loc var-name))
-                  (env/lookup (env-parent env) loc var-name)))))
-(define (env/bind-var-name-with-type env loc var-name typ)
-  (let ([env (env-var-name-to-type env)])
-    (if (hash-has-key? env var-name)
-        (raise (error:semantic:redefinition loc var-name))
-        (hash-set! env var-name typ))))
+                  (raise (error:semantic:no-variable-named (syntax-box-srcloc var) var))
+                  (env/lookup (env-parent env) var)))))
+(define (env/bind-var-name-with-type env loc var typ)
+  (define var-name (syntax-box-datum var))
+  (let* ([env (env-var-name-to-type env)]
+         [defined? (hash-ref env var-name #f)])
+    (if defined?
+        (raise (error:semantic:redefinition loc (car defined?) var))
+        (hash-set! env var-name (cons var typ)))))
 (define (context/push-env ctx)
   (set-context-env-ref! ctx (env/new (context-env-ref ctx))))
 (define (context/pop-env ctx)
@@ -87,7 +93,8 @@
 ;;; context/new-type
 ; This function update context to remember type and update type-id
 ; type-definition default value is CBuiltin, stand for types like: "int", "bool"
-(define (context/new-type ctx type-name [type-definition 'empty])
+(define (context/new-type ctx ty [type-definition 'empty])
+  (define type-name (if (syntax-box? ty) (syntax-box-datum ty) ty))
   (let ([type-definition (if (eqv? 'empty type-definition) (CBuiltin type-name) type-definition)])
     ; 1. update all-types which stores all types by append type-definition into it
     (set-context-all-types! ctx (append (context-all-types ctx) (list type-definition)))
@@ -95,9 +102,10 @@
     (let ([type-id (length (context-all-types ctx))])
       (hash-set! (context-type-name-to-id ctx) type-name type-id))))
 
-(define (context/lookup-type-id ctx type-name
+(define (context/lookup-type-id ctx ty
                                 #:loc [loc ""]
                                 #:struct? [check-struct #f])
+  (define type-name (if (syntax-box? ty) (syntax-box-datum ty) ty))
   (let* ([type-id (hash-ref (context-type-name-to-id ctx) type-name (λ () (raise (format "~a no type named ~a" loc type-name))))]
          [type-definition (list-ref (context-all-types ctx) (- type-id 1))])
     (cond
@@ -109,18 +117,22 @@
        (raise (format "~a type ~a is not a struct, keyword `struct` should be removed" loc type-name))))
     type-id))
 
-(define (context/infer/type-of-expr ctx loc c-expr)
-  (match c-expr
-    ([CExpr/Int _] (context/lookup-type-id ctx "int"))
-    ([CExpr/Bool _] (context/lookup-type-id ctx "bool"))
-    ([CExpr/ID var-name] (env/lookup (context-env-ref ctx) loc var-name))
-    ([CExpr/Binary _ left-expr _] (context/infer/type-of-expr ctx loc left-expr))
-    ([CExpr/Call f _] (CFunction-ret (context/infer/type-of-expr ctx loc f)))))
+(define (context/infer/type-of-expr ctx exp [loc? #f])
+  (define loc (if loc? loc? (syntax-box-srcloc exp)))
+  (define e (if (syntax-box? exp) (syntax-box-datum exp) exp))
+  (define ty
+   (match e
+    [(CExpr/Int _) (context/lookup-type-id ctx "int")]
+    [(CExpr/Bool _) (context/lookup-type-id ctx "bool")]
+    [(CExpr/ID v) (cdr (env/lookup (context-env-ref ctx) v))]
+    [(CExpr/Binary _ left-expr _) (cdr (context/infer/type-of-expr ctx left-expr loc))]
+    [(CExpr/Call f _) (CFunction-ret (cdr (context/infer/type-of-expr ctx f loc)))]))
+  (cons loc ty))
 
 (struct rule/push-env [] #:transparent)
 (struct rule/pop-env [] #:transparent)
 (struct rule/bind [loc name typ] #:transparent)
-(struct rule/synthesis [loc c-expr] #:transparent)
+(struct rule/synthesis [c-expr] #:transparent)
 (struct rule/same-type
   [loc
    ;;; notice expected and actual are proper-rule!
@@ -137,23 +149,32 @@
     ([rule/push-env] (context/push-env ctx))
     ([rule/pop-env] (context/pop-env ctx))
     ([rule/bind loc name typ] (env/bind-var-name-with-type (context-env-ref ctx) loc name typ))
-    ([rule/synthesis loc expr] (context/infer/type-of-expr ctx loc expr))
+    ([rule/synthesis expr] (context/infer/type-of-expr ctx expr))
     ([rule/same-type loc expected actual]
-     (let ([expect-typ (context/execute-rule ctx expected)]
-           [actual-typ (context/execute-rule ctx actual)])
+     (let* ([expected (context/execute-rule ctx expected)]
+            [actual (context/execute-rule ctx actual)]
+            [expect-loc (car expected)]
+            [actual-loc (car actual)]
+            [expect-typ (cdr expected)]
+            [actual-typ (cdr actual)])
        (unless (= expect-typ actual-typ)
            (raise (error:semantic:type-mismatched loc
+                                                  expect-loc
+                                                  actual-loc
                                                   (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
                                                   (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1))))))))
     ([rule/apply loc synthe-function arg*]
      (let ([function-type (context/execute-rule ctx synthe-function)])
        (for ([arg arg*]
              [expect-typ (CFunction-param* function-type)])
-         (define actual-typ (context/execute-rule ctx (rule/synthesis loc arg)))
+         (define actual (context/execute-rule ctx (rule/synthesis loc arg)))
+         (define actual-typ (cdr actual))
          (unless (= expect-typ actual-typ)
             (raise (error:semantic:type-mismatched loc
-                                                  (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
-                                                  (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1)))))))))
+                                                   loc
+                                                   (car actual)
+                                                   (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
+                                                   (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1)))))))))
     ([var typ] typ)))
 
 (module+ test
@@ -186,13 +207,4 @@
    (define test-ctx (empty-context))
    (context/new-type test-ctx "Foo" (CStruct "Foo" '()))
    (define expect-type-id 1)
-   (check-eq? (context/lookup-type-id test-ctx "Foo" #:struct? #t) expect-type-id))
-
-  (test-case
-   "infer type of expr"
-   (define test-ctx (empty-context))
-   (context/new-type test-ctx "int")
-   (context/new-type test-ctx "bool")
-   (check-eq? (context/infer/type-of-expr test-ctx (srcloc 'test 1 1 1 1) (CExpr/Int 1)) 1)
-   (check-eq? (context/infer/type-of-expr test-ctx (srcloc 'test 1 1 1 1) (CExpr/Bool #t)) 2)
-   (check-eq? (context/infer/type-of-expr test-ctx (srcloc 'test 1 1 1 1) (CExpr/Binary + (CExpr/Int 1) (CExpr/Int 2))) 1)))
+   (check-eq? (context/lookup-type-id test-ctx "Foo" #:struct? #t) expect-type-id)))

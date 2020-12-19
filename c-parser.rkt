@@ -21,9 +21,9 @@
     (lexeme/p)
     (pure keyword)))
 (define identifier/p
-  (do [id <- (many+/p letter/p)]
+  (do [id <- (syntax-box/p (many+/p letter/p))]
     (lexeme/p)
-    (pure (list->string id))))
+    (pure (syntax-box (list->string (syntax-box-datum id)) (syntax-box-srcloc id)))))
 (define (type/p ctx)
   (do [check-struct <- (or/p (keyword/p "struct") void/p)]
     [typ <- (syntax-box/p identifier/p)]
@@ -98,10 +98,11 @@
   (if (empty? list-of-op-list)
       base/p
       (table/p (binary/p base/p (car list-of-op-list)) (cdr list-of-op-list))))
-(define expr/p
+(define internal-expr/p
   (table/p unary/p
            '((#\* #\/)
              (#\+ #\-))))
+(define expr/p (syntax-box/p internal-expr/p))
 
 (define (statement/local-var/p ctx)
   (do [typ <- (type/p ctx)]

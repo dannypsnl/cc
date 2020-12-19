@@ -15,16 +15,19 @@
   #:mutable)
 (define (new-context [parent 'no-parent])
   (context (make-hash '()) parent))
-(define (context/new-var ctx var-name location)
+(define (context/new-var ctx var location)
+  (define var-name (syntax-box-datum var))
   (hash-set! (context-var-name-to-location ctx) var-name location))
-(define (context/lookup-var ctx var-name)
+(define (context/lookup-var ctx var)
+  (define var-name (syntax-box-datum var))
   (hash-ref (context-var-name-to-location ctx) var-name
             (λ ()
               (if (eqv? 'no-parent (context-parent ctx))
                   (raise (format "no variable named: ~a, semantic checker must has a bug" var-name))
-                  (context/lookup-var (context-parent ctx) var-name)))))
+                  (context/lookup-var (context-parent ctx) var)))))
 
-(define (expr->IR ctx bb expr)
+(define (expr->IR ctx bb e)
+  (define expr (if (syntax-box? e) (syntax-box-datum e) e))
   (match expr
     [(CExpr/Int v) (x64/int 32 v)]
     [(CExpr/Bool v)
@@ -80,7 +83,7 @@
            [reg '("edi" "esi" "edx" "ecx")])
        (define exp (expr->IR ctx bb arg))
        (emit-to bb (x64/mov (x64/expr->bits exp) exp (x64/reg reg))))
-     (emit-to bb (x64/call 64 (CExpr/ID-v f)))]))
+     (emit-to bb (x64/call 64 (syntax-box-datum (CExpr/ID-v f))))]))
 
 (define (idx->arg/reg index)
   (match index
@@ -95,11 +98,12 @@
 (define (CTop->IR file global-ctx boxed-ctop)
   (match (syntax-box-datum boxed-ctop)
     [(CGlobalVarDef _ name)
-     (context/new-var global-ctx name (x64/global-ref name))
-     (add-global-var file (x64/global-var name))]
+     (define n (syntax-box-datum name))
+     (context/new-var global-ctx name (x64/global-ref n))
+     (add-global-var file (x64/global-var n))]
     [(CStructDef _ _) 'todo-struct]
     [(CFuncDef _ name params stmts)
-     (let ([bb (x64/block name '())]
+     (let ([bb (x64/block (syntax-box-datum name) '())]
            [fn-ctx (new-context global-ctx)]
            [caller-stack (x64/reg "rbp")])
        ; save caller stack

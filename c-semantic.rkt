@@ -35,7 +35,7 @@
   (let ([report* (checker-errors checker)])
     (unless (null? report*)
       (for ([report report*])
-        (print-text (new-report->text report)))
+        (print-text (report->text report)))
       (raise "didn't pass semantic check"))))
 
 (define (checker/check-ctop checker boxed-ctop)
@@ -58,11 +58,13 @@
   (let ([loc (syntax-box-srcloc boxed-stmt)])
     (match (syntax-box-datum boxed-stmt)
       ([CStmt/LocalVarDef typ name init-expr]
-       (checker/add-rule checker (rule/same-type loc typ (rule/synthesis loc init-expr)))
+       (checker/add-rule checker (rule/same-type loc (cons (syntax-box-srcloc name) typ) (rule/synthesis init-expr)))
        (checker/add-rule checker (rule/bind loc name typ)))
       ([CStmt/Assign name expr]
-       (checker/add-rule checker (rule/same-type loc (rule/synthesis loc (CExpr/ID name)) (rule/synthesis loc expr))))
+       (define loc (syntax-box-srcloc name))
+       (define n (syntax-box-datum name))
+       (checker/add-rule checker (rule/same-type loc (rule/synthesis (syntax-box (CExpr/ID (syntax-box n loc)) loc)) (rule/synthesis expr))))
       ([CStmt/Return expr]
-       (checker/add-rule checker (rule/same-type loc ret-typ (rule/synthesis loc expr))))
+       (checker/add-rule checker (rule/same-type loc (cons loc ret-typ) (rule/synthesis expr))))
       ([CExpr/Call f arg*]
-       (checker/add-rule checker (rule/apply loc (rule/synthesis loc f) arg*))))))
+       (checker/add-rule checker (rule/apply loc (rule/synthesis f) arg*))))))
