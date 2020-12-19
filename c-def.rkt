@@ -1,16 +1,16 @@
 #lang racket
 
-(provide CGlobalVarDef
-         CStructDef
-         CFuncDef
-         CStmt/LocalVarDef
-         CStmt/Assign
-         CStmt/Return
-         CExpr/ID
-         CExpr/Int
-         CExpr/Bool
-         CExpr/Binary
-         CExpr/Call)
+(provide (struct-out CGlobalVarDef)
+         (struct-out CStructDef)
+         (struct-out CFuncDef)
+         (struct-out CStmt/LocalVarDef)
+         (struct-out CStmt/Assign)
+         (struct-out CStmt/Return)
+         (struct-out CExpr/ID)
+         (struct-out CExpr/Int)
+         (struct-out CExpr/Bool)
+         (struct-out CExpr/Binary)
+         (struct-out CExpr/Call))
 
 (struct CGlobalVarDef
   [type-id name]

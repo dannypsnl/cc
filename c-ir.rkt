@@ -1,8 +1,8 @@
 #lang racket
 
 (require megaparsack)
-(require "c-def.rkt")
-(require "x64.rkt")
+(require "c-def.rkt"
+         "x64.rkt")
 
 (provide CTop->IR new-context)
 
@@ -71,7 +71,15 @@
        (emit-to bb (x64/mov (x64/expr->bits ret-expr) ret-expr (x64/reg "eax"))))
      stack-level]
     [(CExpr/Call f arg*)
-     (emit-to bb (x64/call 64 f))]))
+     ;; the first four argument would be put into registers
+     ;; since we only have integer(boolean is integer here too)
+     ;; thus the first four arguments would be putted to edi, esi, edx, ecx
+     ;; TODO: rest arguments would be pushed into stack
+     (for ([arg arg*]
+           [reg '("edi" "esi" "edx" "ecx")])
+       (define exp (expr->IR ctx bb arg))
+       (emit-to bb (x64/mov (x64/expr->bits exp) exp (x64/reg reg))))
+     (emit-to bb (x64/call 64 (CExpr/ID-v f)))]))
 
 (define (idx->arg/reg index)
   (match index

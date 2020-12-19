@@ -71,11 +71,11 @@
 
 (define (x64/expr->bits expr)
   (match expr
-    ([x64/int bits _] bits)
-    ([x64/internal/reg _ _] 32)
-    ([x64/add bits _ _] bits)
-    ([x64/sub bits _ _] bits)
-    ([x64/global-ref _] 32)))
+    [(x64/int bits _) bits]
+    [(x64/internal/reg _ _) 32]
+    [(x64/add bits _ _) bits]
+    [(x64/sub bits _ _) bits]
+    [(x64/global-ref _) 32]))
 
 (define (bits->suffix bits)
   (match bits
@@ -106,8 +106,10 @@
     ([x64/ret bits]
      (format "\tret~a~n"
              (bits->suffix bits)))
-    [(x64/call bits f) (format "\tcall~a~n"
-                               (bits->suffix bits))]
+    [(x64/call bits f)
+     (format "\tcall~a ~a~n"
+             (bits->suffix bits)
+             f)]
     ([x64/add bits v loc]
      (format "\tadd~a ~a, ~a~n"
              (bits->suffix bits)

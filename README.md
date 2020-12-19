@@ -19,7 +19,7 @@ A compiler of C subset. Precisely, a C subset with `bool` type extension for con
     - [x] div
   - [x] function
     - [x] call convention(parameter)
-    - [ ] call convention(argument)
+    - [x] call convention(argument)
 
 ### Non-interest part
 
