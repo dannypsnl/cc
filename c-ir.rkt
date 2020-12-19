@@ -74,6 +74,7 @@
      ;; the first four argument would be put into registers
      ;; since we only have integer(boolean is integer here too)
      ;; thus the first four arguments would be putted to edi, esi, edx, ecx
+     ;; NOTE: floating-number using xmm0, xmm1, xmm2, xmm3 by the way
      ;; TODO: rest arguments would be pushed into stack
      (for ([arg arg*]
            [reg '("edi" "esi" "edx" "ecx")])
