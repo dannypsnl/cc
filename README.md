@@ -44,3 +44,11 @@ raco test .
 # Run
 racket main.rkt <c-file>
 ```
+
+### Error Reporting
+
+```sh
+racket main example/should-report/list-fail.c
+```
+
+![image](https://user-images.githubusercontent.com/22004511/102698284-2db04400-4277-11eb-93d8-8bf9c4f4dc5a.png)
