@@ -1,6 +1,7 @@
 #lang racket
 
 (require megaparsack)
+(require reporter)
 (require "c-def.rkt"
          "c-context.rkt"
          "c-type.rkt")
@@ -17,8 +18,8 @@
 
 (define (checker/new ctx)
   (checker ctx '() '()))
-(define (checker/emit-error checker exn)
-  (set-checker-errors! checker (append (checker-errors checker) (list exn))))
+(define (checker/pending-report checker report)
+  (set-checker-errors! checker (append (checker-errors checker) (list report))))
 
 (define (checker/add-rule checker rule)
   (set-checker-rules! checker (append (checker-rules checker) (list rule))))
@@ -26,21 +27,16 @@
   (map
    (λ (rule)
      (with-handlers
-         ([error:semantic? (λ (err) (checker/emit-error checker err))])
+         ([error:semantic? (λ (err) (checker/pending-report checker (error:semantic->report err)))])
        (context/execute-rule
         (checker-ctx checker)
         rule)))
    (checker-rules checker))
-  (let ([errors (checker-errors checker)])
-    (if (null? errors)
-        'ok
-        ((λ ()
-           (map
-            (λ (err)
-              (displayln (error:semantic->string err)))
-            errors
-            )
-           (raise "didn't pass semantic check"))))))
+  (let ([report* (checker-errors checker)])
+    (unless (null? report*)
+      (for ([report report*])
+        (print-text (new-report->text report)))
+      (raise "didn't pass semantic check"))))
 
 (define (checker/check-ctop checker boxed-ctop)
   (let ([loc (syntax-box-srcloc boxed-ctop)])

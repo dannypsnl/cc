@@ -1,5 +1,6 @@
 #lang racket
 
+(require reporter)
 (require "c-def.rkt"
          "c-type.rkt")
 
@@ -18,7 +19,7 @@
          rule/apply
          ; semantic error
          error:semantic?
-         error:semantic->string)
+         error:semantic->report)
 
 (struct context
   [;;; type-id fundamental
@@ -38,14 +39,29 @@
 (struct error:semantic:no-variable-named error:semantic (var-name))
 (struct error:semantic:redefinition error:semantic (var-name))
 (struct error:semantic:type-mismatched error:semantic (expect actual))
-(define (error:semantic->string err)
+(define (error:semantic->report err)
   (match err
-    ([error:semantic:no-variable-named loc var-name] (format "~a: no variable named: ~a" (srcloc->string loc) var-name))
-    ([error:semantic:redefinition loc var-name] (format "~a: redefinition of `~a`" (srcloc->string loc) var-name))
-    ([error:semantic:type-mismatched loc expect actual]
-     (format "~a: type mismatched, expected: `~a` but got: `~a`"
-             (srcloc->string loc)
-             expect actual))))
+    [(error:semantic:no-variable-named loc var-name)
+     (new-report
+       #:error-code "E0001"
+       #:message "variable not found"
+       #:target loc
+       #:labels '()
+       #:hint (format "no variable named: `~a`" var-name))]
+    [(error:semantic:redefinition loc var-name)
+     (new-report
+       #:error-code "E0002"
+       #:message "redefine"
+       #:target loc
+       #:labels '()
+       #:hint (format "redefintion of `~a`" var-name))]
+    [(error:semantic:type-mismatched loc expect actual)
+     (new-report
+       #:error-code "E0003"
+       #:message "type mismatched"
+       #:target loc
+       #:labels '()
+       #:hint (format "expected: `~a` but got: `~a`" expect actual))]))
 
 (define (env/new [parent 'no-parent])
   (env parent (make-hash '())))
