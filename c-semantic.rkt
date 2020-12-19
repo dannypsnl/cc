@@ -52,7 +52,7 @@
        (for ([stmt stmt*])
          (checker/check-stmt checker ret-typ stmt))
        (checker/add-rule checker (rule/pop-env))
-       (checker/add-rule checker (rule/bind loc name (CFunction ret-typ (map (lambda (p) (car p)) param*))))))))
+       (checker/add-rule checker (rule/bind loc name (CFunction ret-typ (map (lambda (p) (cons (cdr p) (car p))) param*))))))))
 
 (define (checker/check-stmt checker ret-typ boxed-stmt)
   (let ([loc (syntax-box-srcloc boxed-stmt)])
@@ -67,4 +67,4 @@
       ([CStmt/Return expr]
        (checker/add-rule checker (rule/same-type loc (cons loc ret-typ) (rule/synthesis expr))))
       ([CExpr/Call f arg*]
-       (checker/add-rule checker (rule/apply loc (rule/synthesis (syntax-box (CExpr/ID (syntax-box (syntax-box-datum f) loc)) loc)) arg*))))))
+       (checker/add-rule checker (rule/apply (rule/synthesis (syntax-box (CExpr/ID (syntax-box (syntax-box-datum f) loc)) loc)) arg*))))))

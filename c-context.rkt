@@ -63,7 +63,7 @@
        #:message "type mismatched"
        #:target loc
        #:labels (list (label expect-loc (format "expect: ~a" expect) #:color (color:blue))
-                      (label actual-loc (format "actual: ~a" actual) #:color (color:red)))
+                      (label actual-loc (format "got: ~a" actual) #:color (color:red)))
        #:hint (format "expected: `~a` but got: `~a`" expect actual))]))
 
 (define (env/new [parent 'no-parent])
@@ -118,14 +118,18 @@
     type-id))
 
 (define (context/infer/type-of-expr ctx exp [loc? #f])
-  (define loc (if loc? loc? (syntax-box-srcloc exp)))
+  (define loc (if (and loc? (not (syntax-box? exp))) loc? (syntax-box-srcloc exp)))
   (define e (if (syntax-box? exp) (syntax-box-datum exp) exp))
   (define ty
    (match e
     [(CExpr/Int _) (context/lookup-type-id ctx "int")]
     [(CExpr/Bool _) (context/lookup-type-id ctx "bool")]
     [(CExpr/ID v) (cdr (env/lookup (context-env-ref ctx) v))]
-    [(CExpr/Binary _ left-expr _) (cdr (context/infer/type-of-expr ctx left-expr loc))]
+    [(CExpr/Binary _ l r)
+     (define l-ty (context/infer/type-of-expr ctx l loc))
+     (define r-ty (context/infer/type-of-expr ctx r loc))
+     (ty-equal!! ctx loc l-ty r-ty)
+     (cdr l-ty)]
     [(CExpr/Call f _) (CFunction-ret (cdr (context/infer/type-of-expr ctx f loc)))]))
   (cons loc ty))
 
@@ -139,10 +143,21 @@
    expected actual]
   #:transparent)
 (struct rule/apply
-  [loc
-   synthe-function ;; rule
+  [synthe-function ;; rule
    arg*]
   #:transparent)
+
+(define (ty-equal!! ctx loc expected actual)
+  (let ([expect-loc (car expected)]
+        [actual-loc (car actual)]
+        [expect-typ (cdr expected)]
+        [actual-typ (cdr actual)])
+    (unless (= expect-typ actual-typ)
+            (raise (error:semantic:type-mismatched loc
+                                                   expect-loc
+                                                   actual-loc
+                                                   (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
+                                                   (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1))))))))
 
 (define (context/execute-rule ctx rule)
   (match rule
@@ -152,31 +167,16 @@
     ([rule/synthesis expr] (context/infer/type-of-expr ctx expr))
     ([rule/same-type loc expected actual]
      (let* ([expected (context/execute-rule ctx expected)]
-            [actual (context/execute-rule ctx actual)]
-            [expect-loc (car expected)]
-            [actual-loc (car actual)]
-            [expect-typ (cdr expected)]
-            [actual-typ (cdr actual)])
-       (unless (= expect-typ actual-typ)
-           (raise (error:semantic:type-mismatched loc
-                                                  expect-loc
-                                                  actual-loc
-                                                  (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
-                                                  (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1))))))))
-    ([rule/apply loc synthe-function arg*]
+            [actual (context/execute-rule ctx actual)])
+       (ty-equal!! ctx loc expected actual)))
+    ([rule/apply synthe-function arg*]
      (let* ([func (context/execute-rule ctx synthe-function)]
             [func-ty (cdr func)]
             [func-loc (car func)])
        (for ([arg arg*]
-             [expect-typ (CFunction-param* func-ty)])
+             [expected (CFunction-param* func-ty)])
          (define actual (context/execute-rule ctx (rule/synthesis arg)))
-         (define actual-typ (cdr actual))
-         (unless (= expect-typ actual-typ)
-            (raise (error:semantic:type-mismatched loc
-                                                   func-loc
-                                                   (car actual)
-                                                   (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
-                                                   (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1)))))))))
+         (ty-equal!! ctx func-loc expected actual))))
     ([var typ] typ)))
 
 (module+ test
