@@ -65,7 +65,7 @@
   (do [v <- (or/p (string/p "true") (string/p "false"))]
     (pure (CExpr/Bool v))))
 (define expr/call/p
-  (do [f <- expr/id/p]
+  (do [f <- identifier/p]
     (char/p #\()
     (lexeme/p)
     [args <- (many/p expr/p #:sep (list/p (char/p #\,) lexeme/p))]

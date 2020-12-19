@@ -54,16 +54,16 @@
        #:error-code "E0002"
        #:message "redefine"
        #:target loc
-       #:labels (list (label (syntax-box-srcloc prev) "previous definition")
-                      (label (syntax-box-srcloc cur) "current definition"))
+       #:labels (list (label (syntax-box-srcloc prev) "previous definition" #:color (color:blue))
+                      (label (syntax-box-srcloc cur) "current definition" #:color (color:red)))
        #:hint (format "redefintion of `~a`" (syntax-box-datum cur)))]
     [(error:semantic:type-mismatched loc expect-loc actual-loc expect actual)
      (report
        #:error-code "E0003"
        #:message "type mismatched"
        #:target loc
-       #:labels (list (label expect-loc (format "expect: ~a" expect))
-                      (label actual-loc (format "actual: ~a" actual)))
+       #:labels (list (label expect-loc (format "expect: ~a" expect) #:color (color:blue))
+                      (label actual-loc (format "actual: ~a" actual) #:color (color:red)))
        #:hint (format "expected: `~a` but got: `~a`" expect actual))]))
 
 (define (env/new [parent 'no-parent])
@@ -164,14 +164,16 @@
                                                   (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
                                                   (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1))))))))
     ([rule/apply loc synthe-function arg*]
-     (let ([function-type (context/execute-rule ctx synthe-function)])
+     (let* ([func (context/execute-rule ctx synthe-function)]
+            [func-ty (cdr func)]
+            [func-loc (car func)])
        (for ([arg arg*]
-             [expect-typ (CFunction-param* function-type)])
-         (define actual (context/execute-rule ctx (rule/synthesis loc arg)))
+             [expect-typ (CFunction-param* func-ty)])
+         (define actual (context/execute-rule ctx (rule/synthesis arg)))
          (define actual-typ (cdr actual))
          (unless (= expect-typ actual-typ)
             (raise (error:semantic:type-mismatched loc
-                                                   loc
+                                                   func-loc
                                                    (car actual)
                                                    (type-definition->string (list-ref (context-all-types ctx) (- expect-typ 1)))
                                                    (type-definition->string (list-ref (context-all-types ctx) (- actual-typ 1)))))))))

@@ -67,4 +67,4 @@
       ([CStmt/Return expr]
        (checker/add-rule checker (rule/same-type loc (cons loc ret-typ) (rule/synthesis expr))))
       ([CExpr/Call f arg*]
-       (checker/add-rule checker (rule/apply loc (rule/synthesis f) arg*))))))
+       (checker/add-rule checker (rule/apply loc (rule/synthesis (syntax-box (CExpr/ID (syntax-box (syntax-box-datum f) loc)) loc)) arg*))))))

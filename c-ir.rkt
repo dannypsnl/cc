@@ -83,7 +83,7 @@
            [reg '("edi" "esi" "edx" "ecx")])
        (define exp (expr->IR ctx bb arg))
        (emit-to bb (x64/mov (x64/expr->bits exp) exp (x64/reg reg))))
-     (emit-to bb (x64/call 64 (syntax-box-datum (CExpr/ID-v f))))]))
+     (emit-to bb (x64/call 64 (syntax-box-datum f)))]))
 
 (define (idx->arg/reg index)
   (match index
