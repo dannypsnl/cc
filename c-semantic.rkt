@@ -35,7 +35,7 @@
   (let ([report* (checker-errors checker)])
     (unless (null? report*)
       (for ([report report*])
-        (print-text (report->text report)))
+        (displayln report))
       (raise "didn't pass semantic check"))))
 
 (define (checker/check-ctop checker boxed-ctop)
