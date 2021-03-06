@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         racket-variant: [ 'BC', 'CS' ]
-        racket-version: [ '7.8', '7.9', 'current' ]
+        racket-version: [ '7.9', 8.0, 'current' ]
     steps:
     - uses: actions/checkout@master
     - name: Setup Racket
