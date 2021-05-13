@@ -3,7 +3,7 @@
 (define deps '("base"
                "reporter"
                "megaparsack-lib"
-               "functional-lib"))
+               "functional"))
 (define build-deps '("scribble-lib" "racket-doc" "rackunit-lib"))
 (define scribblings '(("scribblings/cc.scrbl" ())))
 (define pkg-desc "A compiler of C subset")
