@@ -9,3 +9,5 @@
 (define pkg-desc "A compiler of C subset")
 (define version "0.0")
 (define pkg-authors '(dannypsnl))
+
+(define compile-omit-paths '("example"))
